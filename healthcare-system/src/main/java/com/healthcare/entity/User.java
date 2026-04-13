@@ -38,6 +38,9 @@ public abstract class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
+
     public User() {
     }
 
@@ -115,5 +118,13 @@ public abstract class User {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
     }
 }

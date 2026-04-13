@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,7 +55,7 @@ public class PatientService {
     /**
      * Update patient profile
      */
-    public Patient updateProfile(Long patientId, String bloodType, Double height, Double weight, Date birthDate) {
+    public Patient updateProfile(Long patientId, String bloodType, Double height, Double weight, LocalDate birthDate) {
         Optional<Patient> patientOpt = patientRepository.findById(patientId);
         if (patientOpt.isPresent()) {
             Patient patient = patientOpt.get();

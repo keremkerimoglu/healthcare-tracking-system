@@ -9,9 +9,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -28,7 +28,7 @@ public class PatientController {
     @Autowired
     private PatientService patientService;
 
-    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * Create a new patient
@@ -82,11 +82,11 @@ public class PatientController {
             @RequestParam(required = false) Double weight,
             @RequestParam(required = false) String birthDate) {
         
-        Date birthDateFormatted = null;
+        LocalDate birthDateFormatted = null;
         if (birthDate != null) {
             try {
-                birthDateFormatted = dateFormat.parse(birthDate);
-            } catch (ParseException e) {
+                birthDateFormatted = LocalDate.parse(birthDate, dateFormat);
+            } catch (DateTimeParseException e) {
                 return ResponseEntity.badRequest()
                         .body(new ApiResponse<>(false, "Invalid date format. Use yyyy-MM-dd"));
             }
@@ -126,7 +126,7 @@ public class PatientController {
         dto.setHeight(patient.getHeight());
         dto.setWeight(patient.getWeight());
         if (patient.getBirthDate() != null) {
-            dto.setBirthDate(dateFormat.format(patient.getBirthDate()));
+            dto.setBirthDate(patient.getBirthDate().format(dateFormat));
         }
         return dto;
     }

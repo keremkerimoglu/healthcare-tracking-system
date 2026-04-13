@@ -275,3 +275,4 @@ public class AdminService {
     public void rejectFeedback(Long feedbackId) {
         feedbackRepository.deleteById(feedbackId);
     }
+}

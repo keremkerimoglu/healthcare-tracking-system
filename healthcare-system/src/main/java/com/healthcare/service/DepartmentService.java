@@ -75,7 +75,7 @@ public class DepartmentService {
     public List<Doctor> getDoctorsInDepartment(Long departmentId) {
         Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
         if (departmentOpt.isPresent()) {
-            return departmentOpt.get().getEmployees();
+            return departmentOpt.get().getDoctors();
         }
         return List.of();
     }
@@ -93,7 +93,7 @@ public class DepartmentService {
     public int getDoctorCountInDepartment(Long departmentId) {
         Optional<Department> departmentOpt = departmentRepository.findById(departmentId);
         if (departmentOpt.isPresent()) {
-            return departmentOpt.get().getEmployees().size();
+            return departmentOpt.get().getDoctors().size();
         }
         return 0;
     }

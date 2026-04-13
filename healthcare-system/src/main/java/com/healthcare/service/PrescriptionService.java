@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -42,7 +42,7 @@ public class PrescriptionService {
             prescription.setAppointment(appointment);
             prescription.setMedicineList(medicineList);
             prescription.setDosage(dosage);
-            prescription.setCreatedAt(new Date());
+            prescription.setCreatedAt(LocalDate.now());
             
             // Mark appointment as COMPLETED
             appointment.setStatus(AppointmentStatus.COMPLETED);
