@@ -1,0 +1,552 @@
+/* Patient Panel Styles */
+
+.patient-panel {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 30px 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+}
+
+.patient-panel h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 2.2em;
+}
+
+.patient-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.patient-header h1 {
+  margin: 0;
+  flex: 1;
+  text-align: left;
+  font-size: 1.8em;
+}
+
+.patient-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.patient-info span {
+  color: #7f8c8d;
+  font-weight: 500;
+  min-width: 150px;
+  text-align: right;
+}
+
+/* Login Container */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.login-box {
+  background: white;
+  padding: 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-box h2 {
+  text-align: center;
+  color: #2c3e50;
+  margin-bottom: 30px;
+  font-size: 1.8em;
+}
+
+.login-box .form-group {
+  margin-bottom: 20px;
+}
+
+.login-box .form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.login-box .form-group input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #bdc3c7;
+  border-radius: 6px;
+  font-size: 1em;
+  transition: border-color 0.3s ease;
+}
+
+.login-box .form-group input:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.login-box .btn {
+  width: 100%;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid #ecf0f1;
+  background: white;
+  border-radius: 12px 12px 0 0;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.tab {
+  padding: 15px 25px;
+  background: white;
+  border: none;
+  color: #7f8c8d;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+  flex: 1;
+  text-align: center;
+}
+
+.tab:hover {
+  background: #f8f9fa;
+  color: #3498db;
+}
+
+.tab.active {
+  color: #3498db;
+  background: #ecf0f1;
+  border-bottom-color: #3498db;
+}
+
+/* Tab Content */
+.tab-content {
+  background: white;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 30px;
+}
+
+/* Profile Tab */
+.profile-container {
+  max-width: 800px;
+}
+
+.profile-box {
+  background: #f8f9fa;
+  padding: 30px;
+  border-radius: 8px;
+  border-left: 4px solid #3498db;
+}
+
+.profile-box h2 {
+  color: #2c3e50;
+  margin-top: 0;
+  margin-bottom: 25px;
+  font-size: 1.5em;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.profile-item {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #ecf0f1;
+}
+
+.profile-item label {
+  font-weight: 600;
+  color: #7f8c8d;
+  margin-bottom: 8px;
+  font-size: 0.85em;
+  text-transform: uppercase;
+}
+
+.profile-item value {
+  color: #2c3e50;
+  font-size: 1.1em;
+  font-weight: 500;
+}
+
+/* Appointments List */
+.appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.appointment-item {
+  border: 2px solid #bdc3c7;
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.3s ease;
+  background: #f8f9fa;
+}
+
+.appointment-item:hover {
+  border-color: #3498db;
+  background: #e8f4f8;
+  transform: translateX(5px);
+}
+
+.appointment-item.status-pending {
+  border-left: 4px solid #f39c12;
+}
+
+.appointment-item.status-completed {
+  border-left: 4px solid #27ae60;
+}
+
+.appointment-item.status-cancelled_by_patient,
+.appointment-item.status-cancelled_by_doctor {
+  border-left: 4px solid #e74c3c;
+  opacity: 0.7;
+}
+
+.appointment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.appointment-time {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.appointment-status {
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.85em;
+  background: #ffeaa7;
+  color: #d63031;
+}
+
+.status-badge {
+  background: #ffeaa7;
+  color: #d63031;
+}
+
+.appointment-item.status-completed .status-badge {
+  background: #d5f4e6;
+  color: #27ae60;
+}
+
+.appointment-item.status-cancelled_by_patient .status-badge,
+.appointment-item.status-cancelled_by_doctor .status-badge {
+  background: #fadbd8;
+  color: #e74c3c;
+}
+
+.appointment-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appointment-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.appointment-detail label {
+  font-weight: 600;
+  color: #7f8c8d;
+  min-width: 80px;
+}
+
+.appointment-detail span {
+  color: #2c3e50;
+  text-align: right;
+  flex: 1;
+}
+
+.appointment-detail .notes {
+  background: white;
+  padding: 10px;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+.appointment-footer {
+  padding: 12px 0;
+  border-top: 1px solid #ecf0f1;
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+}
+
+.appointment-footer .btn {
+  flex: 1;
+}
+
+/* Prescriptions List */
+.prescriptions-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  gap: 20px;
+}
+
+.prescription-item {
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(39, 174, 96, 0.1);
+}
+
+.prescription-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(39, 174, 96, 0.2);
+}
+
+.prescription-header {
+  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+  color: white;
+  padding: 15px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.prescription-date {
+  font-weight: 600;
+  font-size: 1em;
+}
+
+.prescription-doctor {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+.prescription-body {
+  padding: 20px;
+  background: #f8f9fa;
+}
+
+.medicine-section,
+.dosage-section {
+  margin-bottom: 15px;
+}
+
+.medicine-section:last-child,
+.dosage-section:last-child {
+  margin-bottom: 0;
+}
+
+.medicine-section h4,
+.dosage-section h4 {
+  margin: 0 0 10px 0;
+  color: #2c3e50;
+  font-size: 0.95em;
+  font-weight: 600;
+}
+
+.medicine-content,
+.dosage-content {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #27ae60;
+  color: #2c3e50;
+  font-size: 0.95em;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.prescription-footer {
+  padding: 15px 20px;
+  background: white;
+  display: flex;
+  gap: 10px;
+}
+
+.btn-small {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 0.85em;
+  border-radius: 4px;
+}
+
+/* Alert Styles */
+.alert {
+  padding: 15px 20px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  animation: slideIn 0.3s ease;
+}
+
+.alert-error {
+  background: #fadbd8;
+  border-left: 4px solid #e74c3c;
+  color: #c0392b;
+}
+
+/* Loading & Empty State */
+.loading {
+  text-align: center;
+  padding: 60px 40px;
+  color: #7f8c8d;
+}
+
+.spinner {
+  border: 4px solid #ecf0f1;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 40px;
+  color: #7f8c8d;
+}
+
+.empty-icon {
+  font-size: 4em;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 1.1em;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 30px;
+  font-size: 1em;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: #3498db;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+}
+
+.btn-secondary {
+  background: #95a5a6;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #7f8c8d;
+  transform: translateY(-2px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .patient-panel {
+    padding: 20px 10px;
+  }
+
+  .patient-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+
+  .patient-header h1 {
+    text-align: center;
+    font-size: 1.6em;
+  }
+
+  .patient-info {
+    width: 100%;
+    justify-content: center;
+    flex-direction: column;
+  }
+
+  .patient-info span {
+    text-align: center;
+  }
+
+  .tab-navigation {
+    flex-direction: column;
+  }
+
+  .tab {
+    border-bottom: 2px solid #ecf0f1;
+    width: 100%;
+    text-align: left;
+    padding: 12px 20px;
+  }
+
+  .prescriptions-list {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .appointment-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tab-content {
+    padding: 20px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
