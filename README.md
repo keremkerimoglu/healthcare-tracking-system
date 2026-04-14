@@ -8,7 +8,7 @@
 
 ---
 
-## 📋 İçindekiler
+  İçindekiler
 
 - [Proje Özeti](#proje-özeti)
 - [Teknoloji Yığını](#teknoloji-yığını)
@@ -23,36 +23,36 @@
 
 ---
 
-## 🎯 Proje Özeti
+  Proje Özeti
 
 **Sağlık Yönetim Sistemi**, modern bir sağlık hizmetleri platformudur. Hastalar randevu alabilir, doktorlar randevuları yönetip reçete yazabilir ve yöneticiler sistem istatistiklerini izleyebilir.
 
-### 🎬 Temel Özellikler
+  Temel Özellikler
 
-✅ **Hasta Modülü**
+ **Hasta Modülü**
 - Poliklinik seçimi, doktor filtrelemesi, randevu kitabı
 - Kişisel sağlık profili (kan grubu, boy, kilo, BMI)
 - Reçete takibi ve doktor değerlendirmesi (1-5 yıldız)
 
-✅ **Doktor Modülü**
+ **Doktor Modülü**
 - Günün randevularını gösterme
 - Hasta profili ve sağlık verilerine erişim
 - Reçete yazma (ilaçlar + dozaj talimatları)
 
-✅ **Admin Modülü**
+ **Admin Modülü**
 - Gerçek zamanlı dashboard (aylık başarı, branş yoğunluğu)
 - Finansal özet (varsayımsal gelir/gider hesabı)
 - Doktor yönetimi (ekleme, pasifleştirme)
 - Geri bildirim onaylama sistemi
 
-✅ **Güvenlik**
+ **Güvenlik**
 - BCrypt ile şifre şifreleme
 - CORS yapılandırması (Cross-Origin Resource Sharing)
 - Role-based erişim kontrolleri
 
 ---
 
-## 🛠 Teknoloji Yığını
+  Teknoloji Yığını
 
 ### Backend
 | Teknoloji | Versiyon | Amaç |
@@ -80,7 +80,7 @@
 
 ---
 
-## 🏗 Mimari
+  Mimari
 
 ### Layered Architecture (Katmanlı Mimari)
 
@@ -141,7 +141,7 @@
 
 ---
 
-## ✅ Tamamlanan Senaryolar
+  Tamamlanan Senaryolar
 
 ### Senaryo 1: Hasta Randevu Alma
 - Poliklinikleri listeleme
@@ -172,7 +172,7 @@
 
 ---
 
-## 📦 Kurulum Rehberi
+  Kurulum Rehberi
 
 ### Ön Gereksinimler
 
@@ -217,7 +217,7 @@ mvn spring-boot:run
 
 # Terminal çıktısında göreceğiniz:
 # Started HealthcareApplication in X.XXX seconds
-# ✅ Backend hazır: http://localhost:8080
+# Backend hazır: http://localhost:8080
 ```
 
 **application.properties kontrol:**
@@ -241,12 +241,12 @@ npm run dev
 
 # Terminal çıktısında göreceğiniz:
 # VITE v5.0.0 ready in XXX ms
-# ✅ Frontend hazır: http://localhost:3000
+# Frontend hazır: http://localhost:3000
 ```
 
 ---
 
-## 🚀 Başlangıç
+  Başlangıç
 
 ### Backend Başlatma
 
@@ -286,7 +286,7 @@ npm run dev
 
 ---
 
-## 🔌 API Dokümantasyonu
+  API Dokümantasyonu
 
 ### Kimlik Doğrulama (Authentication)
 
@@ -602,7 +602,7 @@ Response: 200 OK
 
 ---
 
-## 👥 Kullanıcı Rolleri
+  Kullanıcı Rolleri
 
 | Role | Özellikler | Erişim Sınırları |
 |------|-----------|------------------|
@@ -612,7 +612,7 @@ Response: 200 OK
 
 ---
 
-## 📁 Proje Yapısı
+  Proje Yapısı
 
 ### Backend
 ```
@@ -681,7 +681,7 @@ healthcare-frontend/
 
 ---
 
-## 🔒 Güvenlik Özellikleri
+  Güvenlik Özellikleri
 
 ### 1. Şifre Güvenliği
 - **BCrypt Hashing**: Tüm şifreler `PasswordEncoder` ile hashlenir
@@ -718,23 +718,23 @@ public class DoctorController { ... }
 
 ---
 
-## 📊 Performans & NFR Uygunluğu
+  Performans & NFR Uygunluğu
 
 ### NFR-2: Performans
-✅ **Async Data Loading**: Frontend'de loading states  
-✅ **Pagination Ready**: Repository sorguları List dönüyor  
-✅ **Database Indexing**: ID'ler üzerinde otomatik indeks  
-✅ **Connection Pooling**: HikariCP default  
+**Async Data Loading**: Frontend'de loading states  
+**Pagination Ready**: Repository sorguları List dönüyor  
+**Database Indexing**: ID'ler üzerinde otomatik indeks  
+**Connection Pooling**: HikariCP default  
 
 ### NFR-3: Kullanılabilirlik
-✅ **Responsive Design**: Mobile-first CSS  
-✅ **Turkish Language**: Tüm UI Türkçe  
-✅ **Intuitive Navigation**: Tab-based interfaces  
-✅ **Error Handling**: User-friendly hata mesajları  
+**Responsive Design**: Mobile-first CSS  
+**Turkish Language**: Tüm UI Türkçe  
+**Intuitive Navigation**: Tab-based interfaces  
+**Error Handling**: User-friendly hata mesajları  
 
 ---
 
-## 🧪 Test Yönergeleri
+  Test Yönergeleri
 
 ### Unit Tests (Backend)
 ```bash
@@ -756,7 +756,7 @@ npm test
 
 ---
 
-## 🚀 Deployment
+  Deployment
 
 ### Docker Deployment (Opsiyonel)
 ```dockerfile
@@ -782,7 +782,7 @@ spec:
 
 ---
 
-## 📚 Referanslar
+  Referanslar
 
 - [Spring Boot Dokümantasyonu](https://spring.io/projects/spring-boot)
 - [React Hooks Guide](https://react.dev/reference/react/hooks)
@@ -791,13 +791,13 @@ spec:
 
 ---
 
-## 📄 Lisans
+  Lisans
 
 Bu proje MIT Lisansı altında yayımlanmıştır.
 
 ---
 
-## 👨‍💼 Destek & İletişim
+  Destek & İletişim
 
 **Geliştirici**: Sağlık Sistemi Geliştirme Ekibi  
 **Tarih**: 2026-04-10  
@@ -807,19 +807,19 @@ Sorular ve öneriler için iletişime geçebilirsiniz.
 
 ---
 
-## 🎉 Özellikler Özeti
+  Özellikler Özeti
 
 | Özellik | Durum | Notlar |
 |---------|-------|--------|
-| Hasta Paneli (Senaryo 1-2, 4) | ✅ Complete | Randevu, Reçete, Feedback |
-| Doktor Paneli (Senaryo 2) | ✅ Complete | Randevu, Reçete yazma |
-| Admin Paneli (Senaryo 8-10) | ✅ Complete | Dashboard, Yönetim, Onay |
-| Güvenlik (BCrypt, CORS) | ✅ Complete | - |
-| API Dokümantasyonu | ✅ Complete | - |
-| Responsive Design | ✅ Complete | Mobile-friendly |
-| Versi Kontrolü | ✅ Complete | Git ready |
+| Hasta Paneli (Senaryo 1-2, 4) | Complete | Randevu, Reçete, Feedback |
+| Doktor Paneli (Senaryo 2) | Complete | Randevu, Reçete yazma |
+| Admin Paneli (Senaryo 8-10) | Complete | Dashboard, Yönetim, Onay |
+| Güvenlik (BCrypt, CORS) | Complete | - |
+| API Dokümantasyonu | Complete | - |
+| Responsive Design | Complete | Mobile-friendly |
+| Versi Kontrolü | Complete | Git ready |
 
 ---
 
 **Son Güncelleme**: 2026-04-10  
-**Durum**: 🟢 Ready for Production
+**Durum**:  Ready for Production
