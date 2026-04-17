@@ -15,7 +15,7 @@ import java.util.Map;
  * Provides monthly appointments, department stats, financial summary, and doctor performance
  */
 @RestController
-@RequestMapping("/api/reports")
+@RequestMapping("/reports")
 @CrossOrigin(origins = "http://localhost:3000")
 public class ReportController {
 

@@ -17,7 +17,7 @@ import java.util.Optional;
  * Endpoints: /api/feedback
  */
 @RestController
-@RequestMapping("/api/feedback")
+@RequestMapping("/feedback")
 @CrossOrigin(origins = "http://localhost:3000")
 public class FeedbackController {
 

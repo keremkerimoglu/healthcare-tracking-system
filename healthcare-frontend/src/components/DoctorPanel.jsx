@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { appointmentService, patientService, prescriptionService } from '../services/api';
+import { appointmentService, patientService, prescriptionService, userService } from '../services/api';
 import '../styles/DoctorPanel.css';
 
 const DoctorPanel = () => {
   const [doctorId, setDoctorId] = useState(localStorage.getItem('doctorId') || '');
-  const [doctorEmail, setDoctorEmail] = useState(localStorage.getItem('doctorEmail') || '');
+  const [identityNumber, setIdentityNumber] = useState(localStorage.getItem('doctorIdentityNumber') || '');
+  const [password, setPassword] = useState('');
+  const [identityNumberError, setIdentityNumberError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('doctorId') ? true : false);
 
   const [appointments, setAppointments] = useState([]);
@@ -27,17 +29,35 @@ const DoctorPanel = () => {
     }
   }, [isLoggedIn, doctorId]);
 
-  const handleDoctorLogin = () => {
-    if (!doctorId || !doctorEmail) {
-      setError('Lütfen doktor ID ve email giriniz.');
+  const handleDoctorLogin = async () => {
+    const tcknRegex = /^\d{11}$/;
+    if (!identityNumber || !tcknRegex.test(identityNumber)) {
+      setIdentityNumberError('T.C. Kimlik Numarası tam olarak 11 rakamdan oluşmalıdır.');
       return;
     }
-    
-    localStorage.setItem('doctorId', doctorId);
-    localStorage.setItem('doctorEmail', doctorEmail);
-    setIsLoggedIn(true);
-    setError('');
-    fetchTodayAppointments();
+    if (!password) {
+      setError('Lütfen şifrenizi giriniz.');
+      return;
+    }
+    setIdentityNumberError('');
+
+    try {
+      const response = await userService.login(identityNumber, password);
+      if (response.data.success) {
+        const userData = response.data.data.user;
+        localStorage.setItem('doctorId', userData.id);
+        localStorage.setItem('doctorIdentityNumber', identityNumber);
+        localStorage.setItem('jwtToken', response.data.data.token);
+        setDoctorId(userData.id);
+        setIsLoggedIn(true);
+        setError('');
+        fetchTodayAppointments();
+      } else {
+        setError(response.data.message || 'Giriş yapılamadı.');
+      }
+    } catch (err) {
+      setError('Giriş yapılırken hata oluştu: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const fetchTodayAppointments = async () => {
@@ -135,10 +155,12 @@ const DoctorPanel = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('doctorId');
-    localStorage.removeItem('doctorEmail');
+    localStorage.removeItem('doctorIdentityNumber');
+    localStorage.removeItem('jwtToken');
     setIsLoggedIn(false);
     setDoctorId('');
-    setDoctorEmail('');
+    setIdentityNumber('');
+    setPassword('');
     setAppointments([]);
     setSelectedAppointment(null);
     setPatientProfile(null);
@@ -169,24 +191,33 @@ const DoctorPanel = () => {
             <h2>Doktor Girişi</h2>
             
             <div className="form-group">
-              <label htmlFor="doctorId">Doktor ID:</label>
+              <label htmlFor="identityNumber">T.C. Kimlik Numarası:</label>
               <input
-                id="doctorId"
-                type="number"
-                value={doctorId}
-                onChange={(e) => setDoctorId(e.target.value)}
-                placeholder="Örn: 1"
+                id="identityNumber"
+                type="text"
+                inputMode="numeric"
+                maxLength={11}
+                value={identityNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setIdentityNumber(val);
+                  setIdentityNumberError('');
+                }}
+                placeholder="11 haneli T.C. Kimlik No"
               />
+              {identityNumberError && (
+                <span className="field-error">{identityNumberError}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email:</label>
+              <label htmlFor="password">Şifre:</label>
               <input
-                id="email"
-                type="email"
-                value={doctorEmail}
-                onChange={(e) => setDoctorEmail(e.target.value)}
-                placeholder="doktor@hospital.com"
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Şifrenizi giriniz"
               />
             </div>
 

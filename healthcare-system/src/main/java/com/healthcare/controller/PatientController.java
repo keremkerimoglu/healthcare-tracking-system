@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * Endpoints: /api/patients
  */
 @RestController
-@RequestMapping("/api/patients")
+@RequestMapping("/patients")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PatientController {
 
@@ -121,7 +121,9 @@ public class PatientController {
     private PatientProfileDTO convertToDTO(Patient patient) {
         PatientProfileDTO dto = new PatientProfileDTO();
         dto.setId(patient.getId());
+        dto.setIdentityNumber(patient.getIdentityNumber());
         dto.setEmail(patient.getEmail());
+        dto.setPhoneNumber(patient.getPhoneNumber());
         dto.setBloodType(patient.getBloodType());
         dto.setHeight(patient.getHeight());
         dto.setWeight(patient.getWeight());

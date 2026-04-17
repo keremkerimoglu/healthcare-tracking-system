@@ -533,3 +533,11 @@
     font-size: 0.9em;
   }
 }
+
+.field-error {
+  display: block;
+  color: #dc3545;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+

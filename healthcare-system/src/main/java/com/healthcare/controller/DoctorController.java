@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
  * Endpoints: /api/doctors
  */
 @RestController
-@RequestMapping("/api/doctors")
+@RequestMapping("/doctors")
 @CrossOrigin(origins = "http://localhost:3000")
 public class DoctorController {
 
@@ -180,7 +180,9 @@ public class DoctorController {
     private DoctorProfileDTO convertToDTO(Doctor doctor) {
         DoctorProfileDTO dto = new DoctorProfileDTO();
         dto.setId(doctor.getId());
+        dto.setIdentityNumber(doctor.getIdentityNumber());
         dto.setEmail(doctor.getEmail());
+        dto.setPhoneNumber(doctor.getPhoneNumber());
         dto.setSpecialization(doctor.getSpecialization());
         dto.setBio(doctor.getBio());
         dto.setRatingAvg(doctor.getRatingAvg());

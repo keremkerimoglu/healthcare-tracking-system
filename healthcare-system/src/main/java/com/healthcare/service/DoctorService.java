@@ -1,7 +1,6 @@
 package com.healthcare.service;
 
 import com.healthcare.entity.Doctor;
-import com.healthcare.entity.Department;
 import com.healthcare.repository.DoctorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

@@ -3,7 +3,6 @@ package com.healthcare.controller;
 import com.healthcare.dto.ApiResponse;
 import com.healthcare.dto.AppointmentRequest;
 import com.healthcare.entity.Appointment;
-import com.healthcare.entity.AppointmentStatus;
 import com.healthcare.service.AppointmentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +20,7 @@ import java.util.stream.Collectors;
  * Endpoints: /api/appointments
  */
 @RestController
-@RequestMapping("/api/appointments")
+@RequestMapping("/appointments")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AppointmentController {
 

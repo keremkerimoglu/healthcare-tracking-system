@@ -34,6 +34,13 @@ public class UserService {
     }
 
     /**
+     * Find user by identity number
+     */
+    public Optional<User> findUserByIdentityNumber(String identityNumber) {
+        return userRepository.findByIdentityNumber(identityNumber);
+    }
+
+    /**
      * Find user by email
      */
     public Optional<User> findUserByEmail(String email) {
@@ -79,10 +86,10 @@ public class UserService {
     }
 
     /**
-     * Authenticate user with email and password
+     * Authenticate user with identity number and password
      */
-    public Optional<User> authenticate(String email, String password) {
-        Optional<User> user = userRepository.findByEmail(email);
+    public Optional<User> authenticate(String identityNumber, String password) {
+        Optional<User> user = userRepository.findByIdentityNumber(identityNumber);
         if (user.isPresent() && passwordEncoder.matches(password, user.get().getPassword())) {
             return user;
         }

@@ -1,5 +1,6 @@
 package com.healthcare.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +23,7 @@ public class Doctor extends User {
     private Double ratingAvg = 0.0;
 
     // Relationships
+    @JsonBackReference
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id")
     private Department department;
@@ -36,8 +38,8 @@ public class Doctor extends User {
         super();
     }
 
-    public Doctor(String email, String password, String specialization, Department department) {
-        super(email, password, UserRole.DOCTOR);
+    public Doctor(String identityNumber, String password, String specialization, Department department) {
+        super(identityNumber, password, UserRole.DOCTOR);
         this.specialization = specialization;
         this.department = department;
     }

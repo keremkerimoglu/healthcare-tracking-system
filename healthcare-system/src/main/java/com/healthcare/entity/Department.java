@@ -1,5 +1,6 @@
 package com.healthcare.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class Department {
     private String description;
 
     // Relationships
+    @JsonManagedReference
     @OneToMany(mappedBy = "department", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Doctor> doctors = new ArrayList<>();  // Çalışanlar (Doktorlar)
 

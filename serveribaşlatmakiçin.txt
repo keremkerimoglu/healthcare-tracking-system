@@ -1,0 +1,5 @@
+cd "c:\Users\KEREM\Desktop\yazılım müh proje\healthcare-system"
+mvn spring-boot:run
+
+cd "c:\Users\KEREM\Desktop\yazılım müh proje\healthcare-frontend"
+npm run dev

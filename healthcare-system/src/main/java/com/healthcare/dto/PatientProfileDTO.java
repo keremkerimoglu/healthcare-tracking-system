@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class PatientProfileDTO {
     private Long id;
+    private String identityNumber;
     private String email;
+    private String phoneNumber;
     private String bloodType;
     private Double height;
     private Double weight;

@@ -1,16 +1,20 @@
 package com.healthcare.controller;
 
+import com.healthcare.config.JwtUtil;
 import com.healthcare.dto.ApiResponse;
 import com.healthcare.dto.LoginRequest;
 import com.healthcare.dto.UserProfileDTO;
 import com.healthcare.entity.User;
 import com.healthcare.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -19,12 +23,15 @@ import java.util.stream.Collectors;
  * Endpoints: /api/users
  */
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/users")
 @CrossOrigin(origins = "http://localhost:3000")
 public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtUtil jwtUtil;
 
     /**
      * Get user by ID
@@ -42,12 +49,13 @@ public class UserController {
     }
 
     /**
-     * Get user by email
-     * GET /api/users/email/{email}
+     * Get user by identity number
+     * GET /api/users/identity/{identityNumber}
      */
-    @GetMapping("/email/{email}")
-    public ResponseEntity<ApiResponse<UserProfileDTO>> getUserByEmail(@PathVariable String email) {
-        Optional<User> user = userService.findUserByEmail(email);
+    @GetMapping("/identity/{identityNumber}")
+    public ResponseEntity<ApiResponse<UserProfileDTO>> getUserByIdentityNumber(
+            @PathVariable String identityNumber) {
+        Optional<User> user = userService.findUserByIdentityNumber(identityNumber);
         if (user.isPresent()) {
             UserProfileDTO dto = convertToDTO(user.get());
             return ResponseEntity.ok(new ApiResponse<>(true, "User found", dto));
@@ -70,18 +78,24 @@ public class UserController {
     }
 
     /**
-     * Login user
+     * Login user with T.C. Kimlik Numarası and password
      * POST /api/users/login
      */
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<UserProfileDTO>> loginUser(@RequestBody LoginRequest loginRequest) {
-        Optional<User> user = userService.authenticate(loginRequest.getEmail(), loginRequest.getPassword());
+    public ResponseEntity<ApiResponse<Map<String, Object>>> loginUser(
+            @Valid @RequestBody LoginRequest loginRequest) {
+        Optional<User> user = userService.authenticate(
+                loginRequest.getIdentityNumber(), loginRequest.getPassword());
         if (user.isPresent()) {
-            UserProfileDTO dto = convertToDTO(user.get());
-            return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", dto));
+            User u = user.get();
+            String token = jwtUtil.generateToken(u.getIdentityNumber(), u.getRole().name());
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("token", token);
+            payload.put("user", convertToDTO(u));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Login successful", payload));
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ApiResponse<>(false, "Invalid email or password"));
+                .body(new ApiResponse<>(false, "Geçersiz T.C. Kimlik Numarası veya şifre"));
     }
 
     /**
@@ -103,7 +117,8 @@ public class UserController {
      * PUT /api/users/{id}/reset-password
      */
     @PutMapping("/{id}/reset-password")
-    public ResponseEntity<ApiResponse<Void>> resetPassword(@PathVariable Long id, @RequestParam String newPassword) {
+    public ResponseEntity<ApiResponse<Void>> resetPassword(
+            @PathVariable Long id, @RequestParam String newPassword) {
         if (userService.findUserById(id).isPresent()) {
             userService.resetPassword(id, newPassword);
             return ResponseEntity.ok(new ApiResponse<>(true, "Password reset successfully"));
@@ -118,7 +133,9 @@ public class UserController {
     private UserProfileDTO convertToDTO(User user) {
         UserProfileDTO dto = new UserProfileDTO();
         dto.setId(user.getId());
+        dto.setIdentityNumber(user.getIdentityNumber());
         dto.setEmail(user.getEmail());
+        dto.setPhoneNumber(user.getPhoneNumber());
         dto.setRole(user.getRole().toString());
         dto.setCreatedAt(user.getCreatedAt().toString());
         dto.setUpdatedAt(user.getUpdatedAt().toString());

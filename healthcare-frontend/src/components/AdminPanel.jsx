@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { reportService, doctorService, feedbackService, departmentService } from '../services/api';
+import { reportService, doctorService, feedbackService, departmentService, userService } from '../services/api';
 import '../styles/AdminPanel.css';
 
 const AdminPanel = () => {
   const [adminId, setAdminId] = useState(localStorage.getItem('adminId') || '');
-  const [adminEmail, setAdminEmail] = useState(localStorage.getItem('adminEmail') || '');
+  const [identityNumber, setIdentityNumber] = useState(localStorage.getItem('adminIdentityNumber') || '');
+  const [password, setPassword] = useState('');
+  const [identityNumberError, setIdentityNumberError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('adminId') ? true : false);
 
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, doctors, feedback
@@ -21,6 +23,7 @@ const AdminPanel = () => {
   const [doctors, setDoctors] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [newDoctorForm, setNewDoctorForm] = useState({
+    identityNumber: '',
     email: '',
     password: '',
     specialization: '',
@@ -46,15 +49,34 @@ const AdminPanel = () => {
   }, [isLoggedIn, adminId, activeTab]);
 
   // ==================== LOGIN ====================
-  const handleAdminLogin = () => {
-    if (!adminId) {
-      setError('Lütfen admin ID giriniz.');
+  const handleAdminLogin = async () => {
+    const tcknRegex = /^\d{11}$/;
+    if (!identityNumber || !tcknRegex.test(identityNumber)) {
+      setIdentityNumberError('T.C. Kimlik Numarası tam olarak 11 rakamdan oluşmalıdır.');
       return;
     }
-    localStorage.setItem('adminId', adminId);
-    localStorage.setItem('adminEmail', adminEmail);
-    setIsLoggedIn(true);
-    setError('');
+    if (!password) {
+      setError('Lütfen şifrenizi giriniz.');
+      return;
+    }
+    setIdentityNumberError('');
+
+    try {
+      const response = await userService.login(identityNumber, password);
+      if (response.data.success) {
+        const userData = response.data.data.user;
+        localStorage.setItem('adminId', userData.id);
+        localStorage.setItem('adminIdentityNumber', identityNumber);
+        localStorage.setItem('jwtToken', response.data.data.token);
+        setAdminId(userData.id);
+        setIsLoggedIn(true);
+        setError('');
+      } else {
+        setError(response.data.message || 'Giriş yapılamadı.');
+      }
+    } catch (err) {
+      setError('Giriş yapılırken hata oluştu: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   // ==================== DASHBOARD ====================
@@ -103,8 +125,13 @@ const AdminPanel = () => {
   };
 
   const handleAddDoctor = async () => {
-    if (!newDoctorForm.email || !newDoctorForm.password || !newDoctorForm.specialization) {
-      setError('Lütfen tüm alanları doldurunuz.');
+    const tcknRegex = /^\d{11}$/;
+    if (!newDoctorForm.identityNumber || !tcknRegex.test(newDoctorForm.identityNumber)) {
+      setError('Doktor için geçerli bir T.C. Kimlik Numarası giriniz (11 rakam).');
+      return;
+    }
+    if (!newDoctorForm.password || !newDoctorForm.specialization) {
+      setError('Lütfen tüm zorunlu alanları doldurunuz.');
       return;
     }
 
@@ -114,6 +141,7 @@ const AdminPanel = () => {
       if (response.data.success) {
         setDoctors([...doctors, response.data.data]);
         setNewDoctorForm({
+          identityNumber: '',
           email: '',
           password: '',
           specialization: '',
@@ -204,10 +232,12 @@ const AdminPanel = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('adminId');
-    localStorage.removeItem('adminEmail');
+    localStorage.removeItem('adminIdentityNumber');
+    localStorage.removeItem('jwtToken');
     setIsLoggedIn(false);
     setAdminId('');
-    setAdminEmail('');
+    setIdentityNumber('');
+    setPassword('');
   };
 
   // ==================== RENDER LOGIN ====================
@@ -223,24 +253,33 @@ const AdminPanel = () => {
             <h2>Admin Girişi</h2>
 
             <div className="form-group">
-              <label htmlFor="adminId">Admin ID:</label>
+              <label htmlFor="identityNumber">T.C. Kimlik Numarası:</label>
               <input
-                id="adminId"
-                type="number"
-                value={adminId}
-                onChange={(e) => setAdminId(e.target.value)}
-                placeholder="Örn: 1"
+                id="identityNumber"
+                type="text"
+                inputMode="numeric"
+                maxLength={11}
+                value={identityNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setIdentityNumber(val);
+                  setIdentityNumberError('');
+                }}
+                placeholder="11 haneli T.C. Kimlik No"
               />
+              {identityNumberError && (
+                <span className="field-error">{identityNumberError}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email (Opsiyonel):</label>
+              <label htmlFor="password">Şifre:</label>
               <input
-                id="email"
-                type="email"
-                value={adminEmail}
-                onChange={(e) => setAdminEmail(e.target.value)}
-                placeholder="admin@email.com"
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Şifrenizi giriniz"
               />
             </div>
 
@@ -259,7 +298,7 @@ const AdminPanel = () => {
       <div className="admin-header">
         <h1>⚙️ Admin Paneli</h1>
         <div className="admin-info">
-          <span>{adminEmail || 'Admin'}</span>
+          <span>{identityNumber || 'Admin'}</span>
           <button className="btn btn-secondary" onClick={handleLogout}>
             Çıkış Yap
           </button>
@@ -373,7 +412,7 @@ const AdminPanel = () => {
               {/* Doctor Performance */}
               <div className="dashboard-section">
                 <h2>🌟 Doktor Performansı</h2>
-                <div className="performance-table">
+                <table className="performance-table">
                   <thead>
                     <tr>
                       <th>Doktor</th>
@@ -403,7 +442,7 @@ const AdminPanel = () => {
                       ))
                     )}
                   </tbody>
-                </div>
+                </table>
               </div>
             </div>
           )}
@@ -420,7 +459,21 @@ const AdminPanel = () => {
               <div className="form-container">
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Email:</label>
+                    <label>T.C. Kimlik Numarası: <span style={{color:'red'}}>*</span></label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={11}
+                      value={newDoctorForm.identityNumber}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                        setNewDoctorForm({ ...newDoctorForm, identityNumber: val });
+                      }}
+                      placeholder="11 haneli T.C. Kimlik No"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Email (Bilgi Amaçlı):</label>
                     <input
                       type="email"
                       value={newDoctorForm.email}
@@ -428,8 +481,10 @@ const AdminPanel = () => {
                       placeholder="doktor@email.com"
                     />
                   </div>
+                </div>
+                <div className="form-row">
                   <div className="form-group">
-                    <label>Şifre:</label>
+                    <label>Şifre: <span style={{color:'red'}}>*</span></label>
                     <input
                       type="password"
                       value={newDoctorForm.password}
@@ -438,10 +493,9 @@ const AdminPanel = () => {
                     />
                   </div>
                 </div>
-
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Uzmanlık Alanı:</label>
+                    <label>Uzmanlık Alanı: <span style={{color:'red'}}>*</span></label>
                     <input
                       type="text"
                       value={newDoctorForm.specialization}
@@ -491,13 +545,14 @@ const AdminPanel = () => {
                   doctors.map((doctor) => (
                     <div key={doctor.id} className={`doctor-card ${!doctor.active ? 'inactive' : ''}`}>
                       <div className="doctor-card-header">
-                        <h3>{doctor.email}</h3>
+                        <h3>{doctor.identityNumber || doctor.email}</h3>
                         <span className={`status-badge ${doctor.active ? 'active' : 'inactive'}`}>
                           {doctor.active ? '🟢 Aktif' : '🔴 Pasif'}
                         </span>
                       </div>
                       <div className="doctor-card-body">
                         <p><strong>Uzmanlık:</strong> {doctor.specialization}</p>
+                        {doctor.email && <p><strong>Email:</strong> {doctor.email}</p>}
                         {doctor.department && <p><strong>Bölüm:</strong> {doctor.department.name}</p>}
                         {doctor.bio && <p><strong>Biyografi:</strong> {doctor.bio}</p>}
                       </div>

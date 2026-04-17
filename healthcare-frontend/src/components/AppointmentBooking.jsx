@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { departmentService, doctorService, appointmentService } from '../services/api';
+import { departmentService, doctorService, appointmentService, userService } from '../services/api';
 import '../styles/AppointmentBooking.css';
 
 const AppointmentBooking = () => {
@@ -14,8 +14,9 @@ const AppointmentBooking = () => {
   const [selectedTime, setSelectedTime] = useState(null);
   const [notes, setNotes] = useState('');
   
-  const [patientEmail, setPatientEmail] = useState('');
+  const [patientIdentityNumber, setPatientIdentityNumber] = useState('');
   const [patientPassword, setPatientPassword] = useState('');
+  const [identityNumberError, setIdentityNumberError] = useState('');
   const [patientId, setPatientId] = useState(localStorage.getItem('patientId') || '');
   
   const [loading, setLoading] = useState(false);
@@ -172,21 +173,34 @@ const AppointmentBooking = () => {
   };
 
   const handlePatientLogin = async () => {
-    if (!patientEmail || !patientPassword) {
-      setError('Lütfen email ve şifreyi giriniz.');
+    // Validate identity number
+    const tcknRegex = /^\d{11}$/;
+    if (!patientIdentityNumber || !tcknRegex.test(patientIdentityNumber)) {
+      setIdentityNumberError('T.C. Kimlik Numarası tam olarak 11 rakamdan oluşmalıdır.');
       return;
     }
+    if (!patientPassword) {
+      setError('Lütfen şifreyi giriniz.');
+      return;
+    }
+    setIdentityNumberError('');
 
     try {
       setLoading(true);
-      // Since we don't have a specific patient login endpoint, we'll use patient ID
-      // In a real application, you would authenticate and get the patient ID
-      localStorage.setItem('patientEmail', patientEmail);
-      localStorage.setItem('patientId', patientId);
-      setStep(2);
-      setError('');
+      const response = await userService.login(patientIdentityNumber, patientPassword);
+      if (response.data.success) {
+        const userData = response.data.data.user;
+        localStorage.setItem('patientId', userData.id);
+        localStorage.setItem('patientIdentityNumber', patientIdentityNumber);
+        localStorage.setItem('jwtToken', response.data.data.token);
+        setPatientId(userData.id);
+        setStep(2);
+        setError('');
+      } else {
+        setError(response.data.message || 'Giriş yapılamadı.');
+      }
     } catch (err) {
-      setError('Giriş yapılırken hata oluştu: ' + err.message);
+      setError('Giriş yapılırken hata oluştu: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -224,23 +238,23 @@ const AppointmentBooking = () => {
               </div>
             ) : (
               <div className="patient-input-group">
-                <label htmlFor="patientId">Hasta ID:</label>
+                <label htmlFor="patientIdentityNumber">T.C. Kimlik Numarası:</label>
                 <input
-                  id="patientId"
-                  type="number"
-                  value={patientId}
-                  onChange={(e) => setPatientId(e.target.value)}
-                  placeholder="Örn: 1"
+                  id="patientIdentityNumber"
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={11}
+                  value={patientIdentityNumber}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                    setPatientIdentityNumber(val);
+                    setIdentityNumberError('');
+                  }}
+                  placeholder="11 haneli T.C. Kimlik No"
                 />
-
-                <label htmlFor="email">Email:</label>
-                <input
-                  id="email"
-                  type="email"
-                  value={patientEmail}
-                  onChange={(e) => setPatientEmail(e.target.value)}
-                  placeholder="örnek@email.com"
-                />
+                {identityNumberError && (
+                  <span className="field-error">{identityNumberError}</span>
+                )}
 
                 <label htmlFor="password">Şifre:</label>
                 <input

@@ -1,12 +1,17 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'http://localhost:8080/api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: false,
   headers: {
+    Accept: 'application/json',
     'Content-Type': 'application/json'
-  }
+  },
+  timeout: 10000
 });
 
 export const departmentService = {
@@ -40,6 +45,14 @@ export const patientService = {
   getPatientById: (id) => api.get(`/patients/${id}`),
   createPatient: (patientData) => api.post('/patients', patientData),
   updateProfile: (id, profileData) => api.put(`/patients/${id}/profile`, profileData)
+};
+
+export const userService = {
+  login: (identityNumber, password) =>
+    api.post('/users/login', { identityNumber, password }),
+  getUserById: (id) => api.get(`/users/${id}`),
+  getUserByIdentityNumber: (identityNumber) =>
+    api.get(`/users/identity/${identityNumber}`)
 };
 
 export const prescriptionService = {

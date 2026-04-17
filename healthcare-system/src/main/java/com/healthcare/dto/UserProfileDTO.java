@@ -12,7 +12,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UserProfileDTO {
     private Long id;
+    private String identityNumber;
     private String email;
+    private String phoneNumber;
     private String role;
     private String createdAt;
     private String updatedAt;

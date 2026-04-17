@@ -70,6 +70,13 @@ public class PatientService {
     }
 
     /**
+     * Get patient by identity number
+     */
+    public Optional<Patient> findPatientByIdentityNumber(String identityNumber) {
+        return patientRepository.findByIdentityNumber(identityNumber);
+    }
+
+    /**
      * Get patient by email
      */
     public Optional<Patient> findPatientByEmail(String email) {

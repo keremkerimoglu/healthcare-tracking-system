@@ -1,6 +1,8 @@
 package com.healthcare.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import java.time.LocalDateTime;
 
@@ -22,8 +24,16 @@ public abstract class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Size(min = 11, max = 11, message = "T.C. Kimlik Numarası 11 haneli olmalıdır.")
+    @Pattern(regexp = "\\d{11}", message = "T.C. Kimlik Numarası sadece rakamlardan oluşmalıdır.")
+    @Column(name = "identity_number", nullable = false, unique = true, length = 11)
+    private String identityNumber;
+
+    @Column(length = 100)
     private String email;
+
+    @Column(name = "phone_number", length = 20)
+    private String phoneNumber;
 
     @Column(nullable = false)
     private String password;
@@ -44,8 +54,8 @@ public abstract class User {
     public User() {
     }
 
-    public User(String email, String password, UserRole role) {
-        this.email = email;
+    public User(String identityNumber, String password, UserRole role) {
+        this.identityNumber = identityNumber;
         this.setPassword(password);  // BCrypt encryption
         this.role = role;
         this.createdAt = LocalDateTime.now();
@@ -75,12 +85,30 @@ public abstract class User {
         this.id = id;
     }
 
+    public String getIdentityNumber() {
+        return identityNumber;
+    }
+
+    public void setIdentityNumber(String identityNumber) {
+        this.identityNumber = identityNumber;
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public String getEmail() {
         return email;
     }
 
     public void setEmail(String email) {
         this.email = email;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
         this.updatedAt = LocalDateTime.now();
     }
 

@@ -17,7 +17,7 @@ import java.util.Optional;
  * Endpoints: /api/prescriptions
  */
 @RestController
-@RequestMapping("/api/prescriptions")
+@RequestMapping("/prescriptions")
 @CrossOrigin(origins = "http://localhost:3000")
 public class PrescriptionController {
 

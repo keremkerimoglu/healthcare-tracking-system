@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { patientService, appointmentService, prescriptionService } from '../services/api';
+import { patientService, appointmentService, prescriptionService, userService } from '../services/api';
 import FeedbackModal from './FeedbackModal';
 import '../styles/PatientPanel.css';
 
 const PatientPanel = () => {
   const [patientId, setPatientId] = useState(localStorage.getItem('patientId') || '');
-  const [patientEmail, setPatientEmail] = useState(localStorage.getItem('patientEmail') || '');
+  const [identityNumber, setIdentityNumber] = useState(localStorage.getItem('patientIdentityNumber') || '');
+  const [password, setPassword] = useState('');
+  const [identityNumberError, setIdentityNumberError] = useState('');
   const [isLoggedIn, setIsLoggedIn] = useState(localStorage.getItem('patientId') ? true : false);
 
   const [patientData, setPatientData] = useState(null);
@@ -28,16 +30,34 @@ const PatientPanel = () => {
     }
   }, [isLoggedIn, patientId]);
 
-  const handlePatientLogin = () => {
-    if (!patientId) {
-      setError('Lütfen hasta ID giriniz.');
+  const handlePatientLogin = async () => {
+    const tcknRegex = /^\d{11}$/;
+    if (!identityNumber || !tcknRegex.test(identityNumber)) {
+      setIdentityNumberError('T.C. Kimlik Numarası tam olarak 11 rakamdan oluşmalıdır.');
       return;
     }
+    if (!password) {
+      setError('Lütfen şifrenizi giriniz.');
+      return;
+    }
+    setIdentityNumberError('');
 
-    localStorage.setItem('patientId', patientId);
-    localStorage.setItem('patientEmail', patientEmail);
-    setIsLoggedIn(true);
-    setError('');
+    try {
+      const response = await userService.login(identityNumber, password);
+      if (response.data.success) {
+        const userData = response.data.data.user;
+        localStorage.setItem('patientId', userData.id);
+        localStorage.setItem('patientIdentityNumber', identityNumber);
+        localStorage.setItem('jwtToken', response.data.data.token);
+        setPatientId(userData.id);
+        setIsLoggedIn(true);
+        setError('');
+      } else {
+        setError(response.data.message || 'Giriş yapılamadı.');
+      }
+    } catch (err) {
+      setError('Giriş yapılırken hata oluştu: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   const fetchPatientData = async () => {
@@ -84,10 +104,12 @@ const PatientPanel = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('patientId');
-    localStorage.removeItem('patientEmail');
+    localStorage.removeItem('patientIdentityNumber');
+    localStorage.removeItem('jwtToken');
     setIsLoggedIn(false);
     setPatientId('');
-    setPatientEmail('');
+    setIdentityNumber('');
+    setPassword('');
     setPatientData(null);
     setAppointments([]);
     setPrescriptions([]);
@@ -127,24 +149,33 @@ const PatientPanel = () => {
             <h2>Hasta Girişi</h2>
 
             <div className="form-group">
-              <label htmlFor="patientId">Hasta ID:</label>
+              <label htmlFor="identityNumber">T.C. Kimlik Numarası:</label>
               <input
-                id="patientId"
-                type="number"
-                value={patientId}
-                onChange={(e) => setPatientId(e.target.value)}
-                placeholder="Örn: 1"
+                id="identityNumber"
+                type="text"
+                inputMode="numeric"
+                maxLength={11}
+                value={identityNumber}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setIdentityNumber(val);
+                  setIdentityNumberError('');
+                }}
+                placeholder="11 haneli T.C. Kimlik No"
               />
+              {identityNumberError && (
+                <span className="field-error">{identityNumberError}</span>
+              )}
             </div>
 
             <div className="form-group">
-              <label htmlFor="email">Email (Opsiyonel):</label>
+              <label htmlFor="password">Şifre:</label>
               <input
-                id="email"
-                type="email"
-                value={patientEmail}
-                onChange={(e) => setPatientEmail(e.target.value)}
-                placeholder="hasta@email.com"
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Şifrenizi giriniz"
               />
             </div>
 
@@ -163,7 +194,7 @@ const PatientPanel = () => {
       <div className="patient-header">
         <h1>🏥 Hasta Paneli</h1>
         <div className="patient-info">
-          <span>{patientEmail || 'Hasta'}</span>
+          <span>{identityNumber || 'Hasta'}</span>
           <button className="btn btn-secondary" onClick={handleLogout}>
             Çıkış Yap
           </button>
@@ -208,8 +239,16 @@ const PatientPanel = () => {
                 <h2>👤 Kişisel Bilgilerim</h2>
                 <div className="profile-grid">
                   <div className="profile-item">
+                    <label>T.C. Kimlik No:</label>
+                    <value>{patientData.identityNumber || '-'}</value>
+                  </div>
+                  <div className="profile-item">
                     <label>Email:</label>
-                    <value>{patientData.email}</value>
+                    <value>{patientData.email || '-'}</value>
+                  </div>
+                  <div className="profile-item">
+                    <label>Telefon:</label>
+                    <value>{patientData.phoneNumber || '-'}</value>
                   </div>
                   <div className="profile-item">
                     <label>Kan Grubu:</label>
