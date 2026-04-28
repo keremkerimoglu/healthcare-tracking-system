@@ -1,6 +1,7 @@
 package com.healthcare.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,9 +29,13 @@ public class Doctor extends User {
     @JoinColumn(name = "department_id")
     private Department department;
 
+    // 🔥 DÖNGÜ KIRICI BURADA: Doktor çağrıldığında içindeki randevuları tekrar tekrar getirmeyi durdurur.
+    @JsonIgnore
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> takenAppointments = new ArrayList<>();  // Randevuları takıyı (Doktor'un aldığı randevular)
 
+    // 🔥 DÖNGÜ KIRICI BURADA
+    @JsonIgnore
     @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Feedback> feedbacksAboutDoctor = new ArrayList<>();  // Hakkındaki yorumlar
 

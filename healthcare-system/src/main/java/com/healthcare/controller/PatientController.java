@@ -2,6 +2,7 @@ package com.healthcare.controller;
 
 import com.healthcare.dto.ApiResponse;
 import com.healthcare.dto.PatientProfileDTO;
+import com.healthcare.dto.PatientProfileUpdateRequest;
 import com.healthcare.entity.Patient;
 import com.healthcare.service.PatientService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,16 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
  * REST Controller for Patient management
- * Endpoints: /api/patients
+ * Endpoints: /patients
  */
 @RestController
 @RequestMapping("/patients")
@@ -32,7 +31,7 @@ public class PatientController {
 
     /**
      * Create a new patient
-     * POST /api/patients
+     * POST /patients
      */
     @PostMapping
     public ResponseEntity<ApiResponse<PatientProfileDTO>> createPatient(@RequestBody Patient patient) {
@@ -44,7 +43,7 @@ public class PatientController {
 
     /**
      * Get patient by ID
-     * GET /api/patients/{id}
+     * GET /patients/{id}
      */
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<PatientProfileDTO>> getPatientById(@PathVariable Long id) {
@@ -59,7 +58,7 @@ public class PatientController {
 
     /**
      * Get all patients
-     * GET /api/patients
+     * GET /patients
      */
     @GetMapping
     public ResponseEntity<ApiResponse<List<PatientProfileDTO>>> getAllPatients() {
@@ -71,39 +70,24 @@ public class PatientController {
     }
 
     /**
-     * Update patient profile
-     * PUT /api/patients/{id}/profile
+     * Update patient profile (YENİ VE DOĞRU METOT)
+     * PUT /patients/{id}/profile
      */
     @PutMapping("/{id}/profile")
-    public ResponseEntity<ApiResponse<PatientProfileDTO>> updatePatientProfile(
-            @PathVariable Long id,
-            @RequestParam(required = false) String bloodType,
-            @RequestParam(required = false) Double height,
-            @RequestParam(required = false) Double weight,
-            @RequestParam(required = false) String birthDate) {
-        
-        LocalDate birthDateFormatted = null;
-        if (birthDate != null) {
-            try {
-                birthDateFormatted = LocalDate.parse(birthDate, dateFormat);
-            } catch (DateTimeParseException e) {
-                return ResponseEntity.badRequest()
-                        .body(new ApiResponse<>(false, "Invalid date format. Use yyyy-MM-dd"));
-            }
+    public ResponseEntity<?> updateProfile(
+            @PathVariable Long id, 
+            @RequestBody PatientProfileUpdateRequest request) {
+        try {
+            Patient updatedPatient = patientService.updateProfile(id, request);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Profiliniz başarıyla güncellendi", updatedPatient));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
         }
-
-        Patient updatedPatient = patientService.updateProfile(id, bloodType, height, weight, birthDateFormatted);
-        if (updatedPatient != null) {
-            PatientProfileDTO dto = convertToDTO(updatedPatient);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Patient profile updated", dto));
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(new ApiResponse<>(false, "Patient not found"));
     }
 
     /**
      * Delete patient by ID
-     * DELETE /api/patients/{id}
+     * DELETE /patients/{id}
      */
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deletePatient(@PathVariable Long id) {

@@ -77,6 +77,9 @@ const AppointmentBooking = () => {
     setSelectedTime(null);
     setTimeSlots([]);
     setError('');
+    
+    // DÜZELTİLEN KISIM: Doktor seçildiğinde akışı 3. adıma geçiriyoruz
+    setStep(3); 
   };
 
   const handleDateChange = async (e) => {
@@ -155,7 +158,7 @@ const AppointmentBooking = () => {
         setError(response.data.message || 'Randevu oluşturulamadı.');
       }
     } catch (err) {
-      setError('Randevu oluşturulurken hata oluştu: ' + err.response?.data?.message || err.message);
+      setError('Randevu oluşturulurken hata oluştu: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
@@ -173,7 +176,6 @@ const AppointmentBooking = () => {
   };
 
   const handlePatientLogin = async () => {
-    // Validate identity number
     const tcknRegex = /^\d{11}$/;
     if (!patientIdentityNumber || !tcknRegex.test(patientIdentityNumber)) {
       setIdentityNumberError('T.C. Kimlik Numarası tam olarak 11 rakamdan oluşmalıdır.');

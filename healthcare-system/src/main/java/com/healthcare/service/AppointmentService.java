@@ -216,4 +216,25 @@ public class AppointmentService {
                 .sorted((a1, a2) -> a1.getDateTime().compareTo(a2.getDateTime()))
                 .collect(Collectors.toList());
     }
+    @org.springframework.transaction.annotation.Transactional
+    public Appointment cancelAppointmentByDoctor(Long appointmentId, String cancelReason) {
+        Appointment appointment = appointmentRepository.findById(appointmentId)
+                .orElseThrow(() -> new RuntimeException("Randevu bulunamadı"));
+
+        // Sadece bekleyen randevular iptal edilebilir
+        if (!appointment.getStatus().name().equals("PENDING")) {
+            throw new RuntimeException("Sadece beklemedeki randevular iptal edilebilir!");
+        }
+
+        // Statüyü güncelle
+        appointment.setStatus(com.healthcare.entity.AppointmentStatus.CANCELLED_BY_DOCTOR);
+        
+        // Notlara iptal nedenini ekle
+        String existingNotes = appointment.getNotes() != null ? appointment.getNotes() + " | " : "";
+        appointment.setNotes(existingNotes + "İptal Nedeni: " + cancelReason);
+
+        // TODO: PDF'te istenen Hastaya Bildirim (SMS/E-posta) kodları buraya entegre edilebilir.
+
+        return appointmentRepository.save(appointment);
+    }
 }

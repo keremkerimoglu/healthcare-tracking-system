@@ -1,84 +1,73 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'http://localhost:8080/api';
+const API_URL = 'http://localhost:8080/api'; 
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
-  withCredentials: false,
+  baseURL: API_URL,
   headers: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
   },
-  timeout: 10000
 });
 
-export const departmentService = {
-  getAllDepartments: () => api.get('/departments'),
-  getDepartmentById: (id) => api.get(`/departments/${id}`)
-};
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('jwtToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+}, (error) => {
+  return Promise.reject(error);
+});
 
-export const doctorService = {
-  getAllDoctors: () => api.get('/doctors'),
-  createDoctor: (doctorData) => api.post('/doctors', doctorData),
-  getDoctorsByDepartment: (departmentId) => api.get(`/doctors/department/${departmentId}`),
-  getDoctorsBySpecialization: (specialization) => api.get(`/doctors/specialization/${specialization}`),
-  deactivateDoctor: (doctorId) => api.patch(`/doctors/${doctorId}/deactivate`),
-  reactivateDoctor: (doctorId) => api.patch(`/doctors/${doctorId}/reactivate`)
-};
-
-export const appointmentService = {
-  bookAppointment: (appointmentData) => api.post('/appointments', appointmentData),
-  checkAvailability: (doctorId, dateTime) => 
-    api.get(`/appointments/doctor/${doctorId}/available`, { params: { dateTime } }),
-  getAvailableSlots: (doctorId, date) => 
-    api.get(`/appointments/doctor/${doctorId}/available-slots`, { params: { date } }),
-  getPatientAppointments: (patientId) => api.get(`/appointments/patient/${patientId}`),
-  getDoctorTodayAppointments: (doctorId) => api.get(`/appointments/doctor/${doctorId}/today`),
-  getDoctorAppointmentsByDate: (doctorId, date) => 
-    api.get(`/appointments/doctor/${doctorId}/by-date`, { params: { date } }),
-  cancelAppointment: (id) => api.put(`/appointments/${id}/cancel-patient`)
+export const userService = {
+  login: (identityNumber, password) => api.post('/users/login', { identityNumber, password }),
 };
 
 export const patientService = {
   getPatientById: (id) => api.get(`/patients/${id}`),
-  createPatient: (patientData) => api.post('/patients', patientData),
-  updateProfile: (id, profileData) => api.put(`/patients/${id}/profile`, profileData)
+  updateProfile: (id, data) => api.put(`/patients/${id}/profile`, data),
 };
 
-export const userService = {
-  login: (identityNumber, password) =>
-    api.post('/users/login', { identityNumber, password }),
-  getUserById: (id) => api.get(`/users/${id}`),
-  getUserByIdentityNumber: (identityNumber) =>
-    api.get(`/users/identity/${identityNumber}`)
+export const departmentService = {
+  getAllDepartments: () => api.get('/departments'),
+};
+
+export const doctorService = {
+  getDoctorsByDepartment: (departmentId) => api.get(`/departments/${departmentId}/doctors`),
+  getDoctorById: (id) => api.get(`/doctors/${id}`),
+};
+
+export const appointmentService = {
+  getPatientAppointments: (patientId) => api.get(`/appointments/patient/${patientId}`),
+  getAvailableSlots: (doctorId, date) => api.get(`/appointments/doctor/${doctorId}/slots?date=${date}`),
+  bookAppointment: (data) => api.post('/appointments', data),
 };
 
 export const prescriptionService = {
-  createPrescription: (prescriptionData) => api.post('/prescriptions', prescriptionData),
   getPatientPrescriptions: (patientId) => api.get(`/prescriptions/patient/${patientId}`),
-  getPrescriptionById: (id) => api.get(`/prescriptions/${id}`),
-  getAllPrescriptions: () => api.get('/prescriptions')
+  createPrescription: (data) => api.post('/prescriptions', data),
 };
 
 export const feedbackService = {
-  submitFeedback: (feedbackData) => api.post('/feedback', feedbackData),
-  getFeedbackById: (id) => api.get(`/feedback/${id}`),
-  getAllFeedback: () => api.get('/feedback'),
-  getApprovedFeedback: () => api.get('/feedback/approved'),
-  getPendingFeedback: () => api.get('/feedback/pending'),
-  getDoctorFeedback: (doctorId) => api.get(`/feedback/doctor/${doctorId}`),
-  getAverageDoctorRating: (doctorId) => api.get(`/feedback/doctor/${doctorId}/average-rating`),
-  approveFeedback: (feedbackId) => api.put(`/feedback/${feedbackId}/approve`),
-  rejectFeedback: (feedbackId) => api.delete(`/feedback/${feedbackId}/reject`)
+  submitFeedback: (data) => api.post('/feedbacks', data), 
 };
 
-export const reportService = {
-  getMonthlyAppointments: () => api.get('/reports/monthly-appointments'),
-  getDepartmentStats: () => api.get('/reports/department-stats'),
-  getFinancialSummary: () => api.get('/reports/financial-summary'),
-  getDoctorPerformance: () => api.get('/reports/doctor-performance')
+export const drugService = {
+  getAllDrugs: () => api.get('/drugs'),
 };
+
+export const adminService = {
+  getAllDoctors: () => api.get('/doctors'),
+  getAllPatients: () => api.get('/patients'),
+  createDoctor: (data) => api.post('/doctors', data),
+  deleteDoctor: (id) => api.delete(`/doctors/${id}`),
+  createDepartment: (data) => api.post('/departments', data),
+  deleteDepartment: (id) => api.delete(`/departments/${id}`),
+};
+
+export const cancelAppointmentByDoctor = (id) => api.put(`/appointments/${id}/cancel`);
+export const getDoctorAppointments = (id) => api.get(`/appointments/doctor/${id}`);
+export const completeAppointment = (id, data) => api.put(`/appointments/${id}/complete`, data);
+export const updateDoctorProfile = (id, data) => api.put(`/doctors/${id}/profile`, data);
 
 export default api;

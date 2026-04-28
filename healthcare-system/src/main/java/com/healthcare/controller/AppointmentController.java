@@ -241,4 +241,15 @@ public class AppointmentController {
                     .body(new ApiResponse<>(false, "Invalid date format"));
         }
     }
+    @PatchMapping("/{id}/cancel")
+    public ResponseEntity<?> cancelAppointmentByDoctor(
+            @PathVariable Long id, 
+            @RequestBody com.healthcare.dto.CancelRequest request) {
+        try {
+            Appointment cancelledApt = appointmentService.cancelAppointmentByDoctor(id, request.getCancelReason());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Randevu başarıyla iptal edildi", cancelledApt));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage()));
+        }
+    }
 }

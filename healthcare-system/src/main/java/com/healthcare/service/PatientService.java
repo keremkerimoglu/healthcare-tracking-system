@@ -1,17 +1,15 @@
 package com.healthcare.service;
-
+import com.healthcare.dto.PatientProfileUpdateRequest;
 import com.healthcare.entity.Patient;
 import com.healthcare.repository.PatientRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalDateTime;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-
 /**
  * Service layer for Patient entity
  * Handles patient management and profile updates
@@ -96,4 +94,31 @@ public class PatientService {
     public boolean patientExists(Long id) {
         return patientRepository.existsById(id);
     }
+@org.springframework.transaction.annotation.Transactional
+    public Patient updateProfile(Long patientId, PatientProfileUpdateRequest request) {
+        // 1. Önce hastayı veritabanından bul
+        Patient patient = patientRepository.findById(patientId)
+                .orElseThrow(() -> new RuntimeException("Hasta bulunamadı"));
+
+        // 2. Gelen istekte hangi alanlar doluysa sadece onları güncelle
+        if (request.getHeight() != null) {
+            patient.setHeight(request.getHeight());
+        }
+        if (request.getWeight() != null) {
+            patient.setWeight(request.getWeight());
+        }
+        if (request.getBloodType() != null) {
+            patient.setBloodType(request.getBloodType());
+        
+        if (request.getChronicDiseases() != null) {
+            patient.setChronicDiseases(request.getChronicDiseases()); }
+        
+        }
+
+        // 3. Güncellenmiş haliyle veritabanına kaydet
+        return patientRepository.save(patient);
+    }
+
 }
+
+

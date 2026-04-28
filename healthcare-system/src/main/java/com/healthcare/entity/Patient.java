@@ -1,5 +1,6 @@
 package com.healthcare.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // SİHİRLİ KELİME İÇERİ AKTARILDI
 import jakarta.persistence.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -13,6 +14,9 @@ import java.util.List;
 @DiscriminatorValue("PATIENT")
 public class Patient extends User {
 
+    @Column(name = "chronic_diseases", columnDefinition = "TEXT")
+    private String chronicDiseases;
+    
     @Column(name = "blood_type", length = 3)
     private String bloodType;
 
@@ -26,9 +30,14 @@ public class Patient extends User {
     private LocalDate birthDate;
 
     // Relationships
+    
+    // 🔥 DÖNGÜ KIRICI BURADA: Hasta çağrıldığında randevularında boğulmayı engeller
+    @JsonIgnore
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> appointments = new ArrayList<>();
 
+    // 🔥 DÖNGÜ KIRICI BURADA: Hasta çağrıldığında yorumlarda boğulmayı engeller
+    @JsonIgnore
     @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Feedback> feedbacks = new ArrayList<>();
 
@@ -101,5 +110,13 @@ public class Patient extends User {
 
     public void setFeedbacks(List<Feedback> feedbacks) {
         this.feedbacks = feedbacks;
+    }
+    
+    public String getChronicDiseases() {
+        return chronicDiseases;
+    }
+
+    public void setChronicDiseases(String chronicDiseases) {
+        this.chronicDiseases = chronicDiseases;
     }
 }
