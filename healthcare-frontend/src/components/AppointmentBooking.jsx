@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { departmentService, doctorService, appointmentService, userService } from '../services/api';
+import { Search, CheckCircle } from 'lucide-react';
 import '../styles/AppointmentBooking.css';
 
 const AppointmentBooking = () => {
@@ -222,7 +223,7 @@ const AppointmentBooking = () => {
 
   return (
     <div className="appointment-booking">
-      <h1>🏥 Randevu Al</h1>
+      <h1>Randevu Al</h1>
 
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
@@ -319,7 +320,7 @@ const AppointmentBooking = () => {
               </div>
             ) : doctors.length === 0 ? (
               <div className="empty-state">
-                <div className="empty-state-icon">🔍</div>
+                <div className="empty-state-icon"><Search size={32} /></div>
                 Bu bölümde doktor bulunmamaktadır.
               </div>
             ) : (
@@ -445,7 +446,7 @@ const AppointmentBooking = () => {
         <div className="booking-container">
           <div className="booking-section">
             <div className="success-message">
-              <h2>✅ Randevu Başarıyla Oluşturuldu!</h2>
+              <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={22} color="#10b981" /> Randevu Başarıyla Oluşturuldu!</h2>
               <p>Randevu detayları:</p>
               <div className="summary-box">
                 <div className="summary-item">

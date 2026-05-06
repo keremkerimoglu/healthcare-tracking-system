@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { JitsiMeeting } from '@jitsi/react-sdk'; // 🔥 Görüntülü Görüşme Paketi
+import { JitsiMeeting } from '@jitsi/react-sdk'; // Görüntülü Görüşme Paketi
 import { 
   patientService, 
   appointmentService, 
@@ -9,7 +9,7 @@ import {
   doctorService,
   getDoctorAppointments
 } from '../services/api';
-import { Home, Building2, Video, Calendar, Pill, User, LogOut, CheckCircle, Clock, Activity, Ruler, Scale, Droplets, Save } from 'lucide-react';
+import { Home, Building2, Video, Calendar, Pill, User, LogOut, CheckCircle, Clock, Activity, Ruler, Scale, Droplets, Save, ClipboardList, XCircle } from 'lucide-react';
 import '../styles/PatientPanel.css';
 
 const PatientPanel = () => {
@@ -30,9 +30,9 @@ const PatientPanel = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMsg, setUpdateMsg] = useState({ text: '', type: '' });
 
-  // 🔥 YENİ: VİDEO KONFERANS STATE'İ
+  // Video Konferans State'i
   const [jitsiRoom, setJitsiRoom] = useState(null);
-  // 🔒 İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
+  // İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
   const [usedRooms, setUsedRooms] = useState(new Set());
 
   useEffect(() => {
@@ -77,11 +77,11 @@ const PatientPanel = () => {
       };
       const res = await patientService.updateProfile(patientData.id, formattedData);
       if (res.status === 200) {
-        setUpdateMsg({ text: "✅ Bilgiler başarıyla güncellendi.", type: 'success' });
+        setUpdateMsg({ text: "Bilgiler başarıyla güncellendi.", type: 'success' });
         fetchData(patientData.id); 
         setTimeout(() => setUpdateMsg({ text: '', type: '' }), 3000);
       }
-    } catch (err) { setUpdateMsg({ text: "❌ Güncelleme başarısız.", type: 'error' }); } 
+    } catch (err) { setUpdateMsg({ text: "Güncelleme başarısız.", type: 'error' }); } 
     finally { setIsUpdating(false); }
   };
 
@@ -116,7 +116,7 @@ const PatientPanel = () => {
       const res = await getDoctorAppointments(bookingData.doc.id);
       const doctorAppointments = res.data?.data || [];
 
-      // 🔥 Hem yüz yüze hem online randevular aynı tabloda olduğu için burada çakışma kontrolü otomatik yapılır!
+      // Hem yüz yüze hem online randevular aynı tabloda olduğu için burada çakışma kontrolü otomatik yapılır!
       const bookedTimes = doctorAppointments
         .filter(apt => apt.dateTime.startsWith(date) && apt.status !== 'CANCELLED')
         .map(apt => apt.dateTime.split('T')[1].substring(0, 5));
@@ -147,7 +147,7 @@ const PatientPanel = () => {
     try {
       const dateTimeStr = `${bookingData.date}T${bookingData.time}:00`;
 
-      // 🔥 YENİ: Randevu türünü sekmeden anlıyoruz
+      // Randevu türünü sekmeden anlıyoruz
       const appointmentType = activeTab === 'booking-online' ? 'ONLINE' : 'PHYSICAL';
 
       await appointmentService.bookAppointment({
@@ -160,12 +160,12 @@ const PatientPanel = () => {
         appointmentType: appointmentType // Backend'e türü fırlatıyoruz!
       });
       
-      alert(`✅ ${appointmentType === 'ONLINE' ? 'Online' : 'Yüz Yüze'} randevunuz başarıyla oluşturuldu!`);
+      alert(`${appointmentType === 'ONLINE' ? 'Online' : 'Yüz Yüze'} randevunuz başarıyla oluşturuldu!`);
       setBookingData({ dept: null, doc: null, date: '', time: '', notes: '' });
       fetchData(patientData.id); 
       setActiveTab('appointments'); 
     } catch (err) { 
-      alert("❌ Randevu alınırken hata oluştu."); 
+      alert("Randevu alınırken hata oluştu."); 
     }
   };
 
@@ -181,7 +181,7 @@ const PatientPanel = () => {
     setTimeSlots([]);
   };
 
-  // 🔒 İş Kuralı: Randevunun katılım durumunu hesaplar
+  // İş Kuralı: Randevunun katılım durumunu hesaplar
   // 'expired'  → 10 dk'dan fazla geçmiş → buton kaldırılır
   // 'joinable'  → 5 dk öncesinden 10 dk sonrasına kadar → buton aktif
   // 'not-yet'   → henüz zaman gelmedi → buton pasif
@@ -396,7 +396,7 @@ const PatientPanel = () => {
 
               {activeTab === 'appointments' && (
                 <div className="glass-card">
-                  <h2>📋 Randevu Geçmişim</h2>
+                  <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ClipboardList size={20} /> Randevu Geçmişim</h2>
                   {appointments.length === 0 ? <p>Randevunuz bulunmuyor.</p> : appointments.map(a => (
                     <div key={a.id} style={{ padding: '15px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
@@ -408,8 +408,8 @@ const PatientPanel = () => {
                       </div>
                       
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: a.status === 'PENDING' ? '#fff3cd' : '#d4edda', color: a.status === 'PENDING' ? '#856404' : '#155724' }}>
-                          {a.status === 'PENDING' ? '⏳ Bekliyor' : '✅ Tamamlandı'}
+                        <div style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px', backgroundColor: a.status === 'PENDING' ? '#fff3cd' : '#d4edda', color: a.status === 'PENDING' ? '#856404' : '#155724' }}>
+                          {a.status === 'PENDING' ? <><Clock size={12} /> Bekliyor</> : <><CheckCircle size={12} /> Tamamlandı</>}
                         </div>
                         
                         {/* � İş Kuralı: Zaman sınırı + tek seferlik giriş kontrolü */}
@@ -417,17 +417,17 @@ const PatientPanel = () => {
                           const roomKey = `MHRS_ROOM_${a.id}`;
                           const joinStatus = getJoinStatus(a.dateTime);
                           if (usedRooms.has(roomKey) || joinStatus === 'expired') {
-                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#e74c3c', color: 'white', fontWeight: 'bold', fontSize: '11px' }}>🔴 Süresi Doldu</span>;
+                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#e74c3c', color: 'white', fontWeight: 'bold', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><XCircle size={12} /> Süresi Doldu</span>;
                           }
                           if (joinStatus === 'not-yet') {
-                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#95a5a6', color: 'white', fontWeight: 'bold', fontSize: '11px' }}>⏰ Henüz Başlamadı</span>;
+                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#95a5a6', color: 'white', fontWeight: 'bold', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Clock size={12} /> Henüz Başlamadı</span>;
                           }
                           return (
                             <button
                               onClick={() => setJitsiRoom(roomKey)}
-                              style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                              style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                             >
-                              🎥 Katıl
+                              <Video size={14} /> Katıl
                             </button>
                           );
                         })()}
@@ -484,9 +484,9 @@ const PatientPanel = () => {
             </div>
             <button
               onClick={() => { setUsedRooms(prev => new Set([...prev, jitsiRoom])); setJitsiRoom(null); }}
-              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
-              🚪 Görüşmeden Ayrıl
+              <LogOut size={16} /> Görüşmeden Ayrıl
             </button>
           </div>
           <div style={{ flex: 1 }}>

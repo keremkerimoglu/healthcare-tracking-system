@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { feedbackService } from '../services/api';
+import { Star, Info } from 'lucide-react';
 import '../styles/FeedbackModal.css';
 
 const FeedbackModal = ({ appointmentId, patientId, doctorId, onClose, onSubmitSuccess }) => {
@@ -46,7 +47,7 @@ const FeedbackModal = ({ appointmentId, patientId, doctorId, onClose, onSubmitSu
     <div className="feedback-modal-overlay" onClick={onClose}>
       <div className="feedback-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <h2>⭐ Doktorunuzu Değerlendirin</h2>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Star size={20} color="#f59e0b" /> Doktorunuzu Değlendirin</h2>
           <button className="close-btn" onClick={onClose}>✕</button>
         </div>
 
@@ -64,7 +65,7 @@ const FeedbackModal = ({ appointmentId, patientId, doctorId, onClose, onSubmitSu
                   onClick={() => setRating(star)}
                   title={`${star} yıldız`}
                 >
-                  ⭐
+                  ★
                 </button>
               ))}
               <span className="rating-text">{rating}/5</span>
@@ -88,7 +89,7 @@ const FeedbackModal = ({ appointmentId, patientId, doctorId, onClose, onSubmitSu
 
           {/* Info */}
           <div className="info-box">
-            <p>💡 <strong>Bilgi:</strong> Yorumlarınız admin tarafından onaylanacak ve ardından diğer hastalar için yayınlanacaktır.</p>
+            <p style={{ display: 'flex', alignItems: 'flex-start', gap: '6px' }}><Info size={16} color="#6366f1" style={{ flexShrink: 0, marginTop: '2px' }} /> <span><strong>Bilgi:</strong> Yorumlarınız admin tarafından onaylanacak ve ardından diğer hastalar için yayınlanacaktır.</span></p>
           </div>
         </div>
 

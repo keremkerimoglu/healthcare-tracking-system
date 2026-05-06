@@ -11,7 +11,7 @@ import {
 import { Users, Video, ClipboardList, Settings, LogOut, UserCheck, Stethoscope, Clock, CheckCircle, Eye, X, FileText, Plus, Trash2, Pill, Save } from 'lucide-react';
 import '../styles/DoctorPanel.css';
 
-// 💊 GERÇEKÇİ İLAÇ VERİTABANI
+// Gerçekçi İlaç Veritabanı
 const medDictionary = {
   "Dahiliye": ["Parol 500mg Tablet", "Lansor 30mg Kapsül", "Glifor 1000mg Film Tablet", "Tylolhot Poşet", "Dikloron 50mg"],
   "Kardiyoloji": ["Beloc 50mg Tablet", "Coraspin 100mg", "Lipitor 20mg", "Plavix 75mg", "Tansart 50mg"],
@@ -47,9 +47,9 @@ const DoctorPanel = () => {
   const [historyPrescription, setHistoryPrescription] = useState(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // 🔥 VIDEO KONFERANS STATE'İ
+  // Video Konferans State'i
   const [jitsiRoom, setJitsiRoom] = useState(null);
-  // 🔒 İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
+  // İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
   const [usedRooms, setUsedRooms] = useState(new Set());
 
   useEffect(() => {
@@ -85,11 +85,11 @@ const DoctorPanel = () => {
       const payload = { bio: profileForm.bio, specialization: doctorData.specialization };
       const res = await updateDoctorProfile(doctorData.id, payload);
       if (res.data?.success || res.status === 200) {
-         setUpdateMsg({ text: "✅ Özgeçmişiniz başarıyla güncellendi.", type: 'success' });
+         setUpdateMsg({ text: "Özgeçmişiniz başarıyla güncellendi.", type: 'success' });
          setTimeout(() => setUpdateMsg({ text: '', type: '' }), 3000);
       }
     } catch (err) {
-      setUpdateMsg({ text: "❌ Güncelleme başarısız.", type: 'error' });
+      setUpdateMsg({ text: "Güncelleme başarısız.", type: 'error' });
     }
   };
 
@@ -140,18 +140,18 @@ const DoctorPanel = () => {
         await prescriptionService.createPrescription(prescriptionPayload);
       }
 
-      alert("✅ Randevu başarıyla tamamlandı ve Reçete kaydedildi!");
+      alert("Randevu başarıyla tamamlandı ve Reçete kaydedildi!");
       setModalOpen(false);
       loadInitialData(doctorData.id); 
     } catch (err) {
       console.error(err);
-      alert("❌ İşlem sırasında bir hata oluştu.");
+      alert("İşlem sırasında bir hata oluştu.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // 🔥 TEMİZ VE ORİJİNAL ÇÖZÜM
+  // Temiz ve Orijinal Çözüm
   const openHistoryModal = async (apt) => {
     setSelectedHistoryApt(apt);
     setHistoryPrescription(null); 
@@ -185,7 +185,7 @@ const DoctorPanel = () => {
     ? medDictionary[doctorData.specialization] 
     : medDictionary["Genel"];
 
-  // 🔒 İş Kuralı: Randevunun katılım durumunu hesaplar
+  // İş Kuralı: Randevunun katılım durumunu hesaplar
   // 'expired'  → 10 dk'dan fazla geçmiş → buton kaldırılır
   // 'joinable'  → 5 dk öncesinden 10 dk sonrasına kadar → buton aktif
   // 'not-yet'   → henüz zaman gelmedi → buton pasif
@@ -296,7 +296,7 @@ const DoctorPanel = () => {
                           <span className="doc-badge-new indigo" style={{ fontSize: '10px', marginTop: '4px', display: 'inline-block' }}>Online</span>
                         </div>
                         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          {/* 🔒 İş Kuralı: getJoinStatus + usedRooms */}
+                          {/* İş Kuralı: getJoinStatus + usedRooms */}
                           {(() => {
                             const roomKey = `MHRS_ROOM_${apt.id}`;
                             const joinStatus = getJoinStatus(apt.dateTime);
@@ -312,7 +312,7 @@ const DoctorPanel = () => {
                               </button>
                             );
                           })()}
-                          {/* ❌ KIRMIZI ÇİZGİ: Bu buton hiçbir koşulda kaldırılamaz */}
+                          {/* Not: Bu buton hiçbir koşulda kaldırılamaz */}
                           <button className="doc-btn-primary-new" onClick={() => openExamModal(apt)}>
                             <Stethoscope size={15} /> Müdahale &amp; Reçete
                           </button>
@@ -486,9 +486,9 @@ const DoctorPanel = () => {
             </div>
             <button
               onClick={() => { setUsedRooms(prev => new Set([...prev, jitsiRoom])); setJitsiRoom(null); }}
-              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
             >
-              🚪 Görüşmeden Ayrıl
+              <LogOut size={16} /> Görüşmeden Ayrıl
             </button>
           </div>
           <div style={{ flex: 1 }}>

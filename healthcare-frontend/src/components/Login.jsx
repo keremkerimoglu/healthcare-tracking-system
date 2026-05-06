@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { userService } from '../services/api';
+import { User, Stethoscope, Settings } from 'lucide-react';
 import '../styles/Login.css';
 
 const Login = () => {
@@ -68,7 +69,7 @@ const Login = () => {
           navigate('/doctor', { replace: true });
         }
         else if (role === 'admin') {
-          // 🔥 TEK DEĞİŞEN YER BURASI: Artık alert yok, doğrudan admin sayfasına uçuyorsun!
+          // Admin sayfasına yönlendiriliyor
           localStorage.setItem('adminId', userData.id);
           localStorage.setItem('jwtToken', token);
           navigate('/admin', { replace: true });
@@ -92,7 +93,7 @@ const Login = () => {
       <div className="split-panel panel-patient">
         <div className="overlay"></div>
         <div className="panel-content">
-          <div className="panel-icon">👤</div>
+          <div className="panel-icon"><User size={36} /></div>
           <h2 className="panel-title">Hasta</h2>
           
           <form className="hover-login-form" onSubmit={(e) => handleLoginSubmit(e, 'patient')}>
@@ -123,7 +124,7 @@ const Login = () => {
       <div className="split-panel panel-doctor">
         <div className="overlay"></div>
         <div className="panel-content">
-          <div className="panel-icon">👨‍⚕️</div>
+          <div className="panel-icon"><Stethoscope size={36} /></div>
           <h2 className="panel-title">Hekim</h2>
           
           <form className="hover-login-form" onSubmit={(e) => handleLoginSubmit(e, 'doctor')}>
@@ -154,7 +155,7 @@ const Login = () => {
       <div className="split-panel panel-admin">
         <div className="overlay"></div>
         <div className="panel-content">
-          <div className="panel-icon">⚙️</div>
+          <div className="panel-icon"><Settings size={36} /></div>
           <h2 className="panel-title">Yönetici</h2>
           
           <form className="hover-login-form" onSubmit={(e) => handleLoginSubmit(e, 'admin')}>

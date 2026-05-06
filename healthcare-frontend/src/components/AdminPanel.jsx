@@ -94,10 +94,10 @@ const AdminPanel = () => {
     e.preventDefault();
     try {
       await adminService.createDoctor(newDoc);
-      alert('✅ Doktor başarıyla oluşturuldu.');
+      alert('Doktor başarıyla oluşturuldu.');
       setNewDoc({ identityNumber: '', email: '', password: '', specialization: '', departmentId: '' });
       loadAllData();
-    } catch { alert('❌ Hata: Doktor eklenemedi.'); }
+    } catch { alert('Hata: Doktor eklenemedi.'); }
   };
 
   const handleDeleteDoctor = async (id) => {
