@@ -48,7 +48,8 @@ public class AppointmentController {
                     request.getDoctorId(),
                     request.getPatientId(),
                     dateTime,
-                    request.getNotes()
+                    request.getNotes(),
+                    request.getAppointmentType()
             );
             if (appointment != null) {
                 return ResponseEntity.status(HttpStatus.CREATED)

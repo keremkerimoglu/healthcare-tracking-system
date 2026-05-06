@@ -21,6 +21,10 @@ public class Appointment {
     @Enumerated(EnumType.STRING)
     private AppointmentStatus status = AppointmentStatus.PENDING;
 
+    // 🔥 İŞTE YENİ EKLENEN KISIM: Randevu Türü (Yüz Yüze / Online)
+    @Column(name = "appointment_type")
+    private String appointmentType = "PHYSICAL"; // Varsayılan değer
+
     // --- YENİ EKLENEN TARİH ALANLARI (Hataları çözen kısım) ---
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -45,14 +49,16 @@ public class Appointment {
     public Appointment() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        this.appointmentType = "PHYSICAL";
     }
 
-    // 2. Parametreli Constructor (AppointmentService'in aradığı ve hata veren kısım!)
+    // 2. Parametreli Constructor (AppointmentService'in aradığı kısım)
     public Appointment(LocalDateTime dateTime, Doctor doctor, Patient patient) {
         this.dateTime = dateTime;
         this.doctor = doctor;
         this.patient = patient;
         this.status = AppointmentStatus.PENDING;
+        this.appointmentType = "PHYSICAL";
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
@@ -69,6 +75,9 @@ public class Appointment {
 
     public AppointmentStatus getStatus() { return status; }
     public void setStatus(AppointmentStatus status) { this.status = status; }
+
+    public String getAppointmentType() { return appointmentType; }
+    public void setAppointmentType(String appointmentType) { this.appointmentType = appointmentType; }
 
     public Doctor getDoctor() { return doctor; }
     public void setDoctor(Doctor doctor) { this.doctor = doctor; }

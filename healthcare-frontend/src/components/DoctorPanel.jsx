@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { JitsiMeeting } from '@jitsi/react-sdk';
 import { 
   getDoctorAppointments, 
   updateDoctorProfile, 
@@ -7,6 +8,7 @@ import {
   doctorService,
   prescriptionService 
 } from '../services/api';
+import { Users, Video, ClipboardList, Settings, LogOut, UserCheck, Stethoscope, Clock, CheckCircle, Eye, X, FileText, Plus, Trash2, Pill, Save } from 'lucide-react';
 import '../styles/DoctorPanel.css';
 
 // 💊 GERÇEKÇİ İLAÇ VERİTABANI
@@ -44,6 +46,11 @@ const DoctorPanel = () => {
   const [selectedHistoryApt, setSelectedHistoryApt] = useState(null);
   const [historyPrescription, setHistoryPrescription] = useState(null);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // 🔥 VIDEO KONFERANS STATE'İ
+  const [jitsiRoom, setJitsiRoom] = useState(null);
+  // 🔒 İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
+  const [usedRooms, setUsedRooms] = useState(new Set());
 
   useEffect(() => {
     const id = localStorage.getItem('doctorId');
@@ -178,78 +185,91 @@ const DoctorPanel = () => {
     ? medDictionary[doctorData.specialization] 
     : medDictionary["Genel"];
 
+  // 🔒 İş Kuralı: Randevunun katılım durumunu hesaplar
+  // 'expired'  → 10 dk'dan fazla geçmiş → buton kaldırılır
+  // 'joinable'  → 5 dk öncesinden 10 dk sonrasına kadar → buton aktif
+  // 'not-yet'   → henüz zaman gelmedi → buton pasif
+  const getJoinStatus = (dateTimeStr) => {
+    const now = new Date();
+    const aptTime = new Date(dateTimeStr);
+    const diffMinutes = (now - aptTime) / 60000; // negatif = gelecek, pozitif = geçmiş
+    if (diffMinutes > 10) return 'expired';
+    if (diffMinutes >= -5) return 'joinable';
+    return 'not-yet';
+  };
+
   return (
-    <div className="doctor-dashboard">
-      <aside className="doc-sidebar">
-        <div className="doc-sidebar-header">
-          <div className="doc-sidebar-logo">MHRS+</div>
-          <div className="doc-sidebar-subtitle">Hekim Portalı</div>
+    <div className="doc-dashboard-new">
+      {/* SIDEBAR */}
+      <aside className="doc-sidebar-new">
+        <div className="doc-sidebar-hdr">
+          <span className="doc-logo-badge">MHRS+</span>
+          <span className="doc-logo-sub">Hekim Portalı</span>
         </div>
-        <nav className="doc-nav-menu">
-          <div className={`doc-nav-item ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}><i>👨‍⚕️</i> Bekleyen Hastalar</div>
-          <div className={`doc-nav-item ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}><i>📋</i> Muayene Geçmişi</div>
-          <div className={`doc-nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}><i>⚙️</i> Profil & Uzmanlık</div>
+        <nav className="doc-nav-new">
+          <div className={`doc-nav-item-new ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}>
+            <Users size={18} /> <span>Bekleyen Hastalar</span>
+          </div>
+          <div className={`doc-nav-item-new ${activeTab === 'online-appointments' ? 'active' : ''}`} onClick={() => setActiveTab('online-appointments')}>
+            <Video size={18} /> <span>Online Randevular</span>
+          </div>
+          <div className={`doc-nav-item-new ${activeTab === 'history' ? 'active' : ''}`} onClick={() => setActiveTab('history')}>
+            <ClipboardList size={18} /> <span>Muayene Geçmişi</span>
+          </div>
+          <div className={`doc-nav-item-new ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}>
+            <Settings size={18} /> <span>Profil &amp; Uzmanlık</span>
+          </div>
         </nav>
-        <div className="doc-sidebar-footer">
-          <div className="doc-nav-item" onClick={() => { localStorage.clear(); navigate('/login'); }} style={{ color: '#e74c3c', cursor: 'pointer' }}><i>🚪</i> Güvenli Çıkış</div>
+        <div className="doc-sidebar-ftr">
+          <div className="doc-nav-item-new doc-logout-new" onClick={() => { localStorage.clear(); navigate('/login'); }}>
+            <LogOut size={18} /> <span>Güvenli Çıkış</span>
+          </div>
         </div>
       </aside>
 
-      <main className="doc-main-content">
-        <header className="doc-top-header">
-          <div className="doc-user-profile">
-            <div style={{ color: '#7f8c8d', fontSize: '14px' }}>{getFullName()}</div>
-            <div className="doc-avatar-circle">{doctorData?.email?.charAt(0).toUpperCase() || 'D'}</div>
+      {/* MAIN */}
+      <main className="doc-main-new">
+        <header className="doc-header-new">
+          <div>
+            <h1 className="doc-page-title-new">
+              {activeTab === 'appointments' ? 'Bekleyen Hastalar' :
+               activeTab === 'online-appointments' ? 'Online Randevular' :
+               activeTab === 'history' ? 'Muayene Geçmişi' : 'Profil & Uzmanlık'}
+            </h1>
+            <p className="doc-page-sub-new">Dr. {getFullName()}</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {doctorData?.specialization && (
+              <span className="doc-spec-hdr-badge">{doctorData.specialization}</span>
+            )}
+            <div className="doc-avatar-new">{doctorData?.email?.charAt(0).toUpperCase() || 'D'}</div>
           </div>
         </header>
 
-        <div className="doc-content-wrapper">
+        <div className="doc-content-new">
           {loading && !doctorData ? (
-            <div style={{ textAlign: 'center', padding: '50px', color: '#3498db', fontSize: '20px', fontWeight: 'bold' }}>Hekim Bilgileri Getiriliyor...</div>
+            <div className="doc-loading-new">Hekim Bilgileri Getiriliyor...</div>
           ) : (
             <>
+              {/* YÜZ YÜZE RANDEVULAR */}
               {activeTab === 'appointments' && (
-                <div className="doc-glass-card">
-                  <h2>👨‍⚕️ Bekleyen Randevular</h2>
-                  {appointments.filter(a => a.status === 'PENDING').length === 0 ? (
-                    <p style={{ color: '#7f8c8d' }}>Henüz bir randevunuz bulunmamaktadır.</p>
+                <div className="doc-card-new">
+                  <div className="doc-card-hdr">
+                    <h3>Bekleyen Hastalar (Yüz Yüze)</h3>
+                    <span className="doc-badge-new green">{appointments.filter(a => a.status === 'PENDING' && a.appointmentType !== 'ONLINE').length} hasta</span>
+                  </div>
+                  {appointments.filter(a => a.status === 'PENDING' && a.appointmentType !== 'ONLINE').length === 0 ? (
+                    <p className="doc-muted-new">Bekleyen yüz yüze randevunuz bulunmamaktadır.</p>
                   ) : (
-                    appointments.filter(a => a.status === 'PENDING').map(apt => (
-                      <div key={apt.id} style={{ padding: '20px', border: '1px solid #e1e8ed', borderRadius: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                        <div>
-                          <div style={{ fontWeight: 'bold' }}>T.C. {apt.patient?.identityNumber}</div>
-                          <div style={{ color: '#3498db' }}>{new Date(apt.dateTime).toLocaleString('tr-TR')}</div>
+                    appointments.filter(a => a.status === 'PENDING' && a.appointmentType !== 'ONLINE').map(apt => (
+                      <div key={apt.id} className="doc-apt-row-new">
+                        <div className="doc-apt-icon-new"><UserCheck size={18} color="#10b981" /></div>
+                        <div className="doc-apt-info-new">
+                          <div className="doc-apt-patient-new">T.C. {apt.patient?.identityNumber}</div>
+                          <div className="doc-apt-date-new"><Clock size={12} /> {new Date(apt.dateTime).toLocaleString('tr-TR')}</div>
                         </div>
-                        <button className="btn-modern-blue" onClick={() => openExamModal(apt)}>Müdahale & Reçete</button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {activeTab === 'history' && (
-                <div className="doc-glass-card">
-                  <h2>📋 Muayene Geçmişi</h2>
-                  {appointments.filter(a => a.status === 'COMPLETED').length === 0 ? (
-                    <p style={{ color: '#7f8c8d' }}>Geçmiş muayene kaydınız bulunmamaktadır.</p>
-                  ) : (
-                    appointments.filter(a => a.status === 'COMPLETED').map(apt => (
-                      <div key={apt.id} style={{ padding: '20px', border: '1px solid #e1e8ed', borderRadius: '10px', marginBottom: '15px', backgroundColor: '#f8f9fa', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                          <div style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '16px' }}>
-                            T.C. {apt.patient?.identityNumber} - {apt.patient?.firstName} {apt.patient?.lastName}
-                          </div>
-                          <div style={{ color: '#7f8c8d', fontSize: '14px', marginTop: '5px' }}>
-                            {new Date(apt.dateTime).toLocaleString('tr-TR')}
-                          </div>
-                        </div>
-                        <button 
-                          onClick={() => openHistoryModal(apt)} 
-                          style={{ padding: '10px 20px', backgroundColor: '#34495e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
-                          onMouseOver={(e) => e.target.style.backgroundColor = '#2c3e50'}
-                          onMouseOut={(e) => e.target.style.backgroundColor = '#34495e'}
-                        >
-                          👁️ Görüntüle
+                        <button className="doc-btn-primary-new" onClick={() => openExamModal(apt)}>
+                          <Stethoscope size={15} /> Müdahale &amp; Reçete
                         </button>
                       </div>
                     ))
@@ -257,24 +277,103 @@ const DoctorPanel = () => {
                 </div>
               )}
 
+              {/* ONLINE RANDEVULAR */}
+              {activeTab === 'online-appointments' && (
+                <div className="doc-card-new" style={{ borderTop: '4px solid #6366f1' }}>
+                  <div className="doc-card-hdr">
+                    <h3>Online Randevular</h3>
+                    <span className="doc-badge-new indigo">{appointments.filter(a => a.status === 'PENDING' && a.appointmentType === 'ONLINE').length} randevu</span>
+                  </div>
+                  {appointments.filter(a => a.status === 'PENDING' && a.appointmentType === 'ONLINE').length === 0 ? (
+                    <p className="doc-muted-new">Bekleyen online randevunuz bulunmamaktadır.</p>
+                  ) : (
+                    appointments.filter(a => a.status === 'PENDING' && a.appointmentType === 'ONLINE').map(apt => (
+                      <div key={apt.id} className="doc-apt-row-new doc-apt-online-new">
+                        <div className="doc-apt-icon-new" style={{ background: '#eef2ff' }}><Video size={18} color="#6366f1" /></div>
+                        <div className="doc-apt-info-new">
+                          <div className="doc-apt-patient-new">T.C. {apt.patient?.identityNumber}</div>
+                          <div className="doc-apt-date-new"><Clock size={12} /> {new Date(apt.dateTime).toLocaleString('tr-TR')}</div>
+                          <span className="doc-badge-new indigo" style={{ fontSize: '10px', marginTop: '4px', display: 'inline-block' }}>Online</span>
+                        </div>
+                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          {/* 🔒 İş Kuralı: getJoinStatus + usedRooms */}
+                          {(() => {
+                            const roomKey = `MHRS_ROOM_${apt.id}`;
+                            const joinStatus = getJoinStatus(apt.dateTime);
+                            if (usedRooms.has(roomKey) || joinStatus === 'expired') {
+                              return <span className="doc-badge-new red">Süresi Doldu</span>;
+                            }
+                            if (joinStatus === 'not-yet') {
+                              return <span className="doc-badge-new gray">Henüz Başlamadı</span>;
+                            }
+                            return (
+                              <button className="doc-btn-video-new" onClick={() => setJitsiRoom(roomKey)}>
+                                <Video size={15} /> Görüşmeye Katıl
+                              </button>
+                            );
+                          })()}
+                          {/* ❌ KIRMIZI ÇİZGİ: Bu buton hiçbir koşulda kaldırılamaz */}
+                          <button className="doc-btn-primary-new" onClick={() => openExamModal(apt)}>
+                            <Stethoscope size={15} /> Müdahale &amp; Reçete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* MUAYENE GEÇMİŞİ */}
+              {activeTab === 'history' && (
+                <div className="doc-card-new">
+                  <div className="doc-card-hdr">
+                    <h3>Muayene Geçmişi</h3>
+                    <span className="doc-badge-new gray">{appointments.filter(a => a.status === 'COMPLETED').length} kayıt</span>
+                  </div>
+                  {appointments.filter(a => a.status === 'COMPLETED').length === 0 ? (
+                    <p className="doc-muted-new">Geçmiş muayene kaydınız bulunmamaktadır.</p>
+                  ) : (
+                    appointments.filter(a => a.status === 'COMPLETED').map(apt => (
+                      <div key={apt.id} className="doc-apt-row-new">
+                        <div className="doc-apt-icon-new" style={{ background: '#f0fdf4' }}><CheckCircle size={18} color="#10b981" /></div>
+                        <div className="doc-apt-info-new">
+                          <div className="doc-apt-patient-new">
+                            {apt.patient?.firstName} {apt.patient?.lastName} <span className="doc-muted-new" style={{ fontSize: '13px' }}>— T.C. {apt.patient?.identityNumber}</span>
+                          </div>
+                          <div className="doc-apt-date-new"><Clock size={12} /> {new Date(apt.dateTime).toLocaleString('tr-TR')}</div>
+                        </div>
+                        <button className="doc-btn-secondary-new" onClick={() => openHistoryModal(apt)}>
+                          <Eye size={15} /> Görüntüle
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+
+              {/* PROFİL */}
               {activeTab === 'profile' && (
-                <div className="doc-glass-card" style={{ maxWidth: '700px' }}>
-                  <h2>⚙️ Profil ve Uzmanlık Alanı</h2>
-                  {updateMsg.text && <div style={{ padding: '12px', marginBottom: '15px', borderRadius: '6px', backgroundColor: updateMsg.type === 'success' ? '#d4edda' : '#f8d7da', color: updateMsg.type === 'success' ? '#155724' : '#721c24' }}>{updateMsg.text}</div>}
-                  
-                  <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e1e8ed' }}>
-                    <h3 style={{ fontSize: '16px', color: '#34495e', marginTop: 0 }}>Kurumsal Kimlik</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                      <div><label style={{ fontSize: '12px', color: '#7f8c8d' }}>T.C. Kimlik No</label><div style={{ fontWeight: 'bold' }}>{doctorData?.identityNumber}</div></div>
-                      <div><label style={{ fontSize: '12px', color: '#7f8c8d' }}>Hekim Adı Soyadı</label><div style={{ fontWeight: 'bold' }}>{getFullName()}</div></div>
-                      <div style={{ gridColumn: '1 / -1' }}><label style={{ fontSize: '12px', color: '#7f8c8d' }}>Uzmanlık Alanı</label><div style={{ fontWeight: 'bold', color: '#3498db', fontSize: '18px' }}>{doctorData?.specialization || 'Belirtilmemiş'}</div></div>
+                <div className="doc-card-new" style={{ maxWidth: '700px' }}>
+                  <div className="doc-card-hdr" style={{ marginBottom: '20px' }}>
+                    <h3>Profil ve Uzmanlık Alanı</h3>
+                  </div>
+                  {updateMsg.text && (
+                    <div className={`doc-alert-new ${updateMsg.type === 'success' ? 'success' : 'error'}`}>{updateMsg.text}</div>
+                  )}
+                  <div className="doc-id-box-new">
+                    <div><div className="doc-id-label-new">T.C. Kimlik No</div><div className="doc-id-val-new">{doctorData?.identityNumber}</div></div>
+                    <div><div className="doc-id-label-new">Hekim Adı Soyadı</div><div className="doc-id-val-new">{getFullName()}</div></div>
+                    <div style={{ gridColumn: '1 / -1' }}>
+                      <div className="doc-id-label-new">Uzmanlık Alanı</div>
+                      <div className="doc-id-val-new" style={{ color: '#6366f1', fontSize: '20px' }}>{doctorData?.specialization || 'Belirtilmemiş'}</div>
                     </div>
                   </div>
-
                   <form onSubmit={handleProfileUpdate}>
-                    <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px' }}>Özgeçmiş / Biyografi</label>
-                    <textarea value={profileForm.bio} onChange={(e) => setProfileForm({bio: e.target.value})} style={{ width: '100%', padding: '15px', borderRadius: '8px', border: '1px solid #dfe6e9', minHeight: '120px' }} />
-                    <div style={{ textAlign: 'right', marginTop: '15px' }}><button type="submit" className="btn-modern-blue">Kaydet</button></div>
+                    <label className="doc-label-new">Özgeçmiş / Biyografi</label>
+                    <textarea className="doc-input-new doc-textarea-new" value={profileForm.bio} onChange={(e) => setProfileForm({bio: e.target.value})} />
+                    <div style={{ textAlign: 'right', marginTop: '16px' }}>
+                      <button type="submit" className="doc-btn-primary-new"><Save size={15} /> Kaydet</button>
+                    </div>
                   </form>
                 </div>
               )}
@@ -283,128 +382,137 @@ const DoctorPanel = () => {
         </div>
       </main>
 
-      {/* 1. MUAYENE VE REÇETE YAZMA MODALI */}
+      {/* MODAL 1: MUAYENE & REÇETE */}
       {modalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '550px', maxWidth: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 15px 35px rgba(0,0,0,0.2)' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #f1f2f6', paddingBottom: '10px' }}>
-              <h2 style={{ margin: 0, color: '#2c3e50', fontSize: '22px' }}>Muayene & Reçete Yaz</h2>
-              <button onClick={() => setModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#e74c3c' }}>✖</button>
+        <div className="doc-modal-overlay-new">
+          <div className="doc-modal-new">
+            <div className="doc-modal-hdr-new">
+              <h2>Muayene &amp; Reçete Yaz</h2>
+              <button className="doc-modal-close-new" onClick={() => setModalOpen(false)}><X size={20} /></button>
             </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '8px', color: '#34495e' }}>📝 Muayene Notu / Teşhis</label>
-              <textarea 
-                value={examNotes} 
-                onChange={(e) => setExamNotes(e.target.value)} 
+            <div className="doc-modal-section-new">
+              <label className="doc-label-new"><FileText size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Muayene Notu / Teşhis</label>
+              <textarea
+                value={examNotes}
+                onChange={(e) => setExamNotes(e.target.value)}
                 placeholder="Hastanın şikayeti ve teşhisinizi buraya yazın..."
-                style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #bdc3c7', minHeight: '80px', outline: 'none' }} 
+                className="doc-input-new doc-textarea-new"
               />
             </div>
-
-            <div style={{ backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '10px', marginBottom: '20px' }}>
-              <label style={{ fontWeight: 'bold', display: 'block', marginBottom: '10px', color: '#3498db' }}>💊 Dijital Reçete Oluştur</label>
-              
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
-                <select 
-                  value={currentMed} 
-                  onChange={(e) => setCurrentMed(e.target.value)}
-                  style={{ flex: 2, padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7', outline: 'none' }}
-                >
+            <div className="doc-modal-rx-box-new">
+              <label className="doc-label-new" style={{ color: '#6366f1' }}><Pill size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Dijital Reçete Oluştur</label>
+              <div className="doc-modal-rx-row-new">
+                <select value={currentMed} onChange={(e) => setCurrentMed(e.target.value)} className="doc-input-new" style={{ flex: 2 }}>
                   <option value="">-- İlaç Seçiniz --</option>
-                  {availableMedicines.map((med, idx) => (
-                    <option key={idx} value={med}>{med}</option>
-                  ))}
+                  {availableMedicines.map((med, idx) => <option key={idx} value={med}>{med}</option>)}
                 </select>
-
-                <input 
-                  type="text" 
-                  placeholder="Dozaj (Örn: 2x1 Tok)" 
-                  value={currentDosage}
-                  onChange={(e) => setCurrentDosage(e.target.value)}
-                  style={{ flex: 1, padding: '10px', borderRadius: '6px', border: '1px solid #bdc3c7', outline: 'none' }}
-                />
-                
-                <button onClick={addMedicineToList} style={{ padding: '10px 15px', backgroundColor: '#2ecc71', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}>
-                  Ekle
-                </button>
+                <input type="text" placeholder="Dozaj (Örn: 2x1 Tok)" value={currentDosage} onChange={(e) => setCurrentDosage(e.target.value)} className="doc-input-new" style={{ flex: 1 }} />
+                <button onClick={addMedicineToList} className="doc-btn-add-new"><Plus size={16} /> Ekle</button>
               </div>
-
               {prescriptionList.length > 0 && (
-                <div style={{ borderTop: '1px solid #e1e8ed', paddingTop: '10px' }}>
-                  <div style={{ fontWeight: 'bold', marginBottom: '5px', fontSize: '14px', color: '#7f8c8d' }}>Reçeteye Eklenenler:</div>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {prescriptionList.map((item, index) => (
-                      <li key={index} style={{ display: 'flex', justifyContent: 'space-between', backgroundColor: 'white', padding: '8px 12px', border: '1px solid #ecf0f1', borderRadius: '6px', marginBottom: '5px', fontSize: '14px' }}>
-                        <span><strong>{item.medicationName}</strong> - {item.dosage}</span>
-                        <span onClick={() => removeMedicine(index)} style={{ color: '#e74c3c', cursor: 'pointer', fontWeight: 'bold' }}>Sil</span>
-                      </li>
-                    ))}
-                  </ul>
+                <div className="doc-rx-list-new">
+                  <div className="doc-muted-new" style={{ fontSize: '12px', marginBottom: '6px', fontWeight: 600 }}>Reçeteye Eklenenler:</div>
+                  {prescriptionList.map((item, index) => (
+                    <div key={index} className="doc-rx-item-new">
+                      <span><strong>{item.medicationName}</strong> — {item.dosage}</span>
+                      <button onClick={() => removeMedicine(index)} className="doc-rx-del-new"><Trash2 size={14} /></button>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
-
             <div style={{ textAlign: 'right' }}>
-              <button 
-                onClick={submitExamAndPrescription} 
-                disabled={isSubmitting}
-                style={{ padding: '12px 25px', backgroundColor: '#3498db', color: 'white', border: 'none', borderRadius: '8px', fontSize: '16px', fontWeight: 'bold', cursor: isSubmitting ? 'not-allowed' : 'pointer', transition: 'background 0.3s' }}
-              >
-                {isSubmitting ? 'Kaydediliyor...' : 'Randevuyu ve Reçeteyi Tamamla'}
+              <button onClick={submitExamAndPrescription} disabled={isSubmitting} className="doc-btn-submit-new">
+                {isSubmitting ? 'Kaydediliyor...' : <><CheckCircle size={16} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Randevuyu ve Reçeteyi Tamamla</>}
               </button>
             </div>
-
           </div>
         </div>
       )}
 
-      {/* 2. MUAYENE DETAY (GÖRÜNTÜLE) MODALI */}
+      {/* MODAL 2: GEÇMİŞ GÖRÜNTÜLEME */}
       {viewModalOpen && selectedHistoryApt && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(0,0,0,0.6)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, backdropFilter: 'blur(4px)' }}>
-          <div style={{ backgroundColor: 'white', padding: '30px', borderRadius: '15px', width: '550px', maxWidth: '90%', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 15px 35px rgba(0,0,0,0.2)' }}>
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '2px solid #f1f2f6', paddingBottom: '10px' }}>
-              <h2 style={{ margin: 0, color: '#2c3e50', fontSize: '20px' }}>📄 Muayene Detayları</h2>
-              <button onClick={() => setViewModalOpen(false)} style={{ background: 'none', border: 'none', fontSize: '24px', cursor: 'pointer', color: '#e74c3c' }}>✖</button>
+        <div className="doc-modal-overlay-new">
+          <div className="doc-modal-new">
+            <div className="doc-modal-hdr-new">
+              <h2>Muayene Detayları</h2>
+              <button className="doc-modal-close-new" onClick={() => setViewModalOpen(false)}><X size={20} /></button>
             </div>
-
-            <div style={{ marginBottom: '20px', backgroundColor: '#f8f9fa', padding: '15px', borderRadius: '8px', border: '1px solid #e1e8ed', display: 'flex', justifyContent: 'space-between' }}>
+            <div className="doc-history-info-new">
               <div>
-                <div style={{ fontSize: '12px', color: '#7f8c8d' }}>Hasta Bilgisi</div>
-                <div style={{ fontWeight: 'bold', color: '#2c3e50' }}>{selectedHistoryApt.patient?.firstName} {selectedHistoryApt.patient?.lastName} (T.C. {selectedHistoryApt.patient?.identityNumber})</div>
+                <div className="doc-muted-new" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Hasta Bilgisi</div>
+                <div style={{ fontWeight: 700, color: '#0f172a' }}>{selectedHistoryApt.patient?.firstName} {selectedHistoryApt.patient?.lastName} (T.C. {selectedHistoryApt.patient?.identityNumber})</div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '12px', color: '#7f8c8d' }}>Muayene Tarihi</div>
-                <div style={{ fontWeight: 'bold', color: '#3498db' }}>{new Date(selectedHistoryApt.dateTime).toLocaleString('tr-TR')}</div>
+                <div className="doc-muted-new" style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Muayene Tarihi</div>
+                <div style={{ fontWeight: 700, color: '#6366f1' }}>{new Date(selectedHistoryApt.dateTime).toLocaleString('tr-TR')}</div>
               </div>
             </div>
-
-            <div style={{ marginBottom: '25px' }}>
-              <h3 style={{ fontSize: '16px', color: '#e67e22', borderBottom: '1px solid #eee', paddingBottom: '5px', marginBottom: '10px' }}>📝 Muayene ve Şikayet Notu</h3>
-              <div style={{ color: '#555', backgroundColor: '#fdfdfd', padding: '15px', borderRadius: '8px', border: '1px solid #eee', minHeight: '60px', fontStyle: selectedHistoryApt.notes ? 'normal' : 'italic' }}>
-                {selectedHistoryApt.notes || 'Sisteme herhangi bir not veya şikayet girilmemiş.'}
+            <div className="doc-modal-section-new">
+              <label className="doc-label-new" style={{ color: '#f59e0b' }}><FileText size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Muayene ve Şikayet Notu</label>
+              <div className="doc-notes-box-new" style={{ fontStyle: selectedHistoryApt.notes ? 'normal' : 'italic' }}>
+                {selectedHistoryApt.notes || 'Sisteme herhangi bir not girilmemiş.'}
               </div>
             </div>
-
             <div>
-              <h3 style={{ fontSize: '16px', color: '#2ecc71', borderBottom: '1px solid #eee', paddingBottom: '5px', marginBottom: '10px' }}>💊 Yazılan Reçete Bilgisi</h3>
-              
+              <label className="doc-label-new" style={{ color: '#10b981' }}><Pill size={14} style={{ verticalAlign: 'middle', marginRight: '6px' }} />Yazılan Reçete Bilgisi</label>
               {isLoadingHistory ? (
-                <div style={{ padding: '15px', textAlign: 'center', color: '#7f8c8d' }}>Reçete kayıtları aranıyor...</div>
+                <div className="doc-muted-new" style={{ padding: '15px', textAlign: 'center' }}>Reçete kayıtları aranıyor...</div>
               ) : historyPrescription ? (
-                <div style={{ backgroundColor: '#fdfdfd', padding: '15px', borderRadius: '8px', border: '1px solid #eee', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div><strong style={{ color: '#34495e' }}>İlaç Listesi:</strong> <span style={{ color: '#333' }}>{historyPrescription.medicineList}</span></div>
-                  <div><strong style={{ color: '#34495e' }}>Dozaj (Kullanım):</strong> <span style={{ color: '#333' }}>{historyPrescription.dosage}</span></div>
+                <div className="doc-notes-box-new">
+                  <div><strong style={{ color: '#475569' }}>İlaç Listesi:</strong> {historyPrescription.medicineList}</div>
+                  <div style={{ marginTop: '8px' }}><strong style={{ color: '#475569' }}>Dozaj:</strong> {historyPrescription.dosage}</div>
                 </div>
               ) : (
-                <div style={{ color: '#e74c3c', fontStyle: 'italic', backgroundColor: '#fdfdfd', padding: '15px', borderRadius: '8px', border: '1px solid #eee' }}>
+                <div className="doc-notes-box-new" style={{ color: '#ef4444', fontStyle: 'italic' }}>
                   Bu muayene sonucunda hastaya reçete yazılmamış.
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
 
+      {/* JITSI — DOKUNULMAZ */}
+      {jitsiRoom && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '15px 20px', backgroundColor: '#1e1b4b', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+            <div>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#e74c3c', borderRadius: '50%' }}></span>
+                Online Muayene Odası — Hekim Görünümü
+              </h3>
+              <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#a5b4fc' }}>Bağlantı şifrelidir. Hasta odaya katılmayı bekliyordur.</p>
+            </div>
+            <button
+              onClick={() => { setUsedRooms(prev => new Set([...prev, jitsiRoom])); setJitsiRoom(null); }}
+              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+            >
+              🚪 Görüşmeden Ayrıl
+            </button>
+          </div>
+          <div style={{ flex: 1 }}>
+            <JitsiMeeting
+              domain="meet.systemli.org"
+              roomName={jitsiRoom}
+              configOverwrite={{
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                disableModeratorIndicator: true
+              }}
+              interfaceConfigOverwrite={{
+                DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+                SHOW_CHROME_EXTENSION_BANNER: false
+              }}
+              userInfo={{
+                displayName: `Dr. ${getFullName()}`
+              }}
+              getIFrameRef={(iframeRef) => {
+                iframeRef.style.height = '100%';
+                iframeRef.style.width = '100%';
+                iframeRef.style.border = 'none';
+              }}
+            />
           </div>
         </div>
       )}

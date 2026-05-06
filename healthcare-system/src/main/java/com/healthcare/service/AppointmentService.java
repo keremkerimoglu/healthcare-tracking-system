@@ -33,7 +33,7 @@ public class AppointmentService {
     /**
      * Book a new appointment
      */
-    public Appointment bookAppointment(Long doctorId, Long patientId, LocalDateTime dateTime, String notes) {
+    public Appointment bookAppointment(Long doctorId, Long patientId, LocalDateTime dateTime, String notes, String appointmentType) {
         Optional<Doctor> doctorOpt = doctorRepository.findById(doctorId);
         Optional<Patient> patientOpt = patientRepository.findById(patientId);
 
@@ -41,6 +41,7 @@ public class AppointmentService {
             Appointment appointment = new Appointment(dateTime, doctorOpt.get(), patientOpt.get());
             appointment.setNotes(notes);
             appointment.setStatus(AppointmentStatus.PENDING);
+            appointment.setAppointmentType(appointmentType != null && !appointmentType.isBlank() ? appointmentType : "PHYSICAL");
             return appointmentRepository.save(appointment);
         }
         return null;

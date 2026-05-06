@@ -15,4 +15,5 @@ public class AppointmentRequest {
     private Long patientId;
     private String dateTime;
     private String notes;
+    private String appointmentType; // "PHYSICAL" veya "ONLINE"
 }

@@ -63,6 +63,7 @@ export const adminService = {
   deleteDoctor: (id) => api.delete(`/doctors/${id}`),
   createDepartment: (data) => api.post('/departments', data),
   deleteDepartment: (id) => api.delete(`/departments/${id}`),
+  getDashboard: () => api.get('/admin/dashboard'),
 };
 
 export const cancelAppointmentByDoctor = (id) => api.put(`/appointments/${id}/cancel`);

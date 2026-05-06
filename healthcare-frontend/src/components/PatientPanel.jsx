@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { JitsiMeeting } from '@jitsi/react-sdk'; // 🔥 Görüntülü Görüşme Paketi
 import { 
   patientService, 
   appointmentService, 
@@ -8,7 +9,7 @@ import {
   doctorService,
   getDoctorAppointments
 } from '../services/api';
-import FeedbackModal from './FeedbackModal';
+import { Home, Building2, Video, Calendar, Pill, User, LogOut, CheckCircle, Clock, Activity, Ruler, Scale, Droplets, Save } from 'lucide-react';
 import '../styles/PatientPanel.css';
 
 const PatientPanel = () => {
@@ -28,7 +29,11 @@ const PatientPanel = () => {
   const [profileForm, setProfileForm] = useState({ height: '', weight: '', bloodType: '', chronicDiseases: '' });
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateMsg, setUpdateMsg] = useState({ text: '', type: '' });
-  const [feedbackModal, setFeedbackModal] = useState({ isOpen: false, appointmentId: null, doctorId: null });
+
+  // 🔥 YENİ: VİDEO KONFERANS STATE'İ
+  const [jitsiRoom, setJitsiRoom] = useState(null);
+  // 🔒 İş Kuralı: Bir kez girilip çıkılan odaları tutan liste
+  const [usedRooms, setUsedRooms] = useState(new Set());
 
   useEffect(() => {
     const id = localStorage.getItem('patientId');
@@ -111,6 +116,7 @@ const PatientPanel = () => {
       const res = await getDoctorAppointments(bookingData.doc.id);
       const doctorAppointments = res.data?.data || [];
 
+      // 🔥 Hem yüz yüze hem online randevular aynı tabloda olduğu için burada çakışma kontrolü otomatik yapılır!
       const bookedTimes = doctorAppointments
         .filter(apt => apt.dateTime.startsWith(date) && apt.status !== 'CANCELLED')
         .map(apt => apt.dateTime.split('T')[1].substring(0, 5));
@@ -141,16 +147,20 @@ const PatientPanel = () => {
     try {
       const dateTimeStr = `${bookingData.date}T${bookingData.time}:00`;
 
+      // 🔥 YENİ: Randevu türünü sekmeden anlıyoruz
+      const appointmentType = activeTab === 'booking-online' ? 'ONLINE' : 'PHYSICAL';
+
       await appointmentService.bookAppointment({
         doctorId: bookingData.doc.id,         
         patientId: patientData.id,            
         doctor: { id: bookingData.doc.id },   
         patient: { id: patientData.id },      
         dateTime: dateTimeStr, 
-        notes: bookingData.notes
+        notes: bookingData.notes,
+        appointmentType: appointmentType // Backend'e türü fırlatıyoruz!
       });
       
-      alert("✅ Randevunuz başarıyla oluşturuldu!");
+      alert(`✅ ${appointmentType === 'ONLINE' ? 'Online' : 'Yüz Yüze'} randevunuz başarıyla oluşturuldu!`);
       setBookingData({ dept: null, doc: null, date: '', time: '', notes: '' });
       fetchData(patientData.id); 
       setActiveTab('appointments'); 
@@ -164,123 +174,222 @@ const PatientPanel = () => {
      return patientData?.email || 'Yükleniyor...';
   };
 
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setBookingData({ dept: null, doc: null, date: '', time: '', notes: '' }); // Sekme değişince formu temizle
+    setDoctors([]);
+    setTimeSlots([]);
+  };
+
+  // 🔒 İş Kuralı: Randevunun katılım durumunu hesaplar
+  // 'expired'  → 10 dk'dan fazla geçmiş → buton kaldırılır
+  // 'joinable'  → 5 dk öncesinden 10 dk sonrasına kadar → buton aktif
+  // 'not-yet'   → henüz zaman gelmedi → buton pasif
+  const getJoinStatus = (dateTimeStr) => {
+    const now = new Date();
+    const aptTime = new Date(dateTimeStr);
+    const diffMinutes = (now - aptTime) / 60000; // negatif = gelecek, pozitif = geçmiş
+    if (diffMinutes > 10) return 'expired';
+    if (diffMinutes >= -5) return 'joinable';
+    return 'not-yet';
+  };
+
   return (
-    <div className="patient-dashboard">
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <div className="sidebar-logo">MHRS+</div>
-          <div className="sidebar-subtitle">Vatandaş Portalı</div>
+    <div className="pat-dashboard">
+      {/* SIDEBAR */}
+      <aside className="pat-sidebar">
+        <div className="pat-sidebar-header">
+          <span className="pat-logo-badge">MHRS+</span>
+          <span className="pat-logo-sub">Vatandaş Portalı</span>
         </div>
-        <nav className="nav-menu">
-          <div className={`nav-item ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => setActiveTab('summary')}><i>🏠</i> Özet</div>
-          <div className={`nav-item ${activeTab === 'booking' ? 'active' : ''}`} onClick={() => setActiveTab('booking')}><i>🗓️</i> Randevu Al</div>
-          <div className={`nav-item ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => setActiveTab('appointments')}><i>📋</i> Randevularım</div>
-          <div className={`nav-item ${activeTab === 'prescriptions' ? 'active' : ''}`} onClick={() => setActiveTab('prescriptions')}><i>💊</i> Reçetelerim</div>
-          <div className={`nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => setActiveTab('profile')}><i>👤</i> Profilim</div>
+        <nav className="pat-nav">
+          <div className={`pat-nav-item ${activeTab === 'summary' ? 'active' : ''}`} onClick={() => handleTabChange('summary')}>
+            <Home size={18} /> <span>Özet</span>
+          </div>
+          <div className={`pat-nav-item ${activeTab === 'booking-physical' ? 'active' : ''}`} onClick={() => handleTabChange('booking-physical')}>
+            <Building2 size={18} /> <span>Hastane Randevusu</span>
+          </div>
+          <div className={`pat-nav-item ${activeTab === 'booking-online' ? 'active' : ''}`} onClick={() => handleTabChange('booking-online')}>
+            <Video size={18} /> <span>Online Muayene</span>
+          </div>
+          <div className={`pat-nav-item ${activeTab === 'appointments' ? 'active' : ''}`} onClick={() => handleTabChange('appointments')}>
+            <Calendar size={18} /> <span>Randevularım</span>
+          </div>
+          <div className={`pat-nav-item ${activeTab === 'prescriptions' ? 'active' : ''}`} onClick={() => handleTabChange('prescriptions')}>
+            <Pill size={18} /> <span>Reçetelerim</span>
+          </div>
+          <div className={`pat-nav-item ${activeTab === 'profile' ? 'active' : ''}`} onClick={() => handleTabChange('profile')}>
+            <User size={18} /> <span>Profilim</span>
+          </div>
         </nav>
-        <div className="sidebar-footer">
-          <div className="nav-item logout" onClick={() => { localStorage.clear(); navigate('/login'); }} style={{ color: '#e74c3c' }}><i>🚪</i> Güvenli Çıkış</div>
+        <div className="pat-sidebar-footer">
+          <div className="pat-nav-item pat-logout" onClick={() => { localStorage.clear(); navigate('/login'); }}>
+            <LogOut size={18} /> <span>Güvenli Çıkış</span>
+          </div>
         </div>
       </aside>
 
-      <main className="main-content">
-        <header className="top-header">
-          <div className="user-profile-summary">
-            <div className="user-identity">T.C. {patientData?.identityNumber || '...'}</div>
-            <div className="avatar-circle">{patientData?.email ? patientData.email.charAt(0).toUpperCase() : 'V'}</div>
+      {/* MAIN */}
+      <main className="pat-main">
+        <header className="pat-header">
+          <div>
+            <h1 className="pat-page-title">
+              {activeTab === 'summary' ? 'Sağlık Özeti' :
+               activeTab === 'booking-physical' ? 'Hastane Randevusu' :
+               activeTab === 'booking-online' ? 'Online Muayene' :
+               activeTab === 'appointments' ? 'Randevularım' :
+               activeTab === 'prescriptions' ? 'Reçetelerim' : 'Profilim'}
+            </h1>
+            <p className="pat-page-sub">T.C. {patientData?.identityNumber || '...'}</p>
           </div>
+          <div className="pat-header-avatar">{patientData?.email?.charAt(0).toUpperCase() || 'V'}</div>
         </header>
 
-        <div className="content-wrapper">
+        <div className="pat-content">
           {loading && !patientData ? (
-            <div style={{ textAlign: 'center', padding: '50px', color: '#2ecc71', fontSize: '20px', fontWeight: 'bold' }}>Sistem Verileri Yükleniyor...</div>
+            <div className="pat-loading">Sistem Verileri Yükleniyor...</div>
           ) : (
             <>
+              {/* ÖZET */}
               {activeTab === 'summary' && (
-                <div className="glass-card" style={{ maxWidth: '600px' }}>
-                  <h2>⚖️ Sağlık Verileri Özeti</h2>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', fontSize: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px' }}><strong style={{ color: '#7f8c8d' }}>Boy:</strong> <span>{patientData?.height ? `${patientData.height} cm` : 'Girilecek'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px' }}><strong style={{ color: '#7f8c8d' }}>Kilo:</strong> <span>{patientData?.weight ? `${patientData.weight} kg` : 'Girilecek'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eee', paddingBottom: '10px' }}><strong style={{ color: '#7f8c8d' }}>Kan Grubu:</strong> <span style={{ color: '#e74c3c', fontWeight: 'bold' }}>{patientData?.bloodType || 'Belirtilmemiş'}</span></div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong style={{ color: '#7f8c8d' }}>Vücut Kitle İndeksi (VKİ):</strong> <span style={{ fontWeight: 'bold', color: '#2980b9' }}>{patientData?.height && patientData?.weight ? (patientData.weight / (patientData.height/100)**2).toFixed(1) : '-'}</span></div>
+                <div style={{ maxWidth: '720px' }}>
+                  <div className="pat-kpi-grid">
+                    <div className="pat-kpi-card">
+                      <div className="pat-kpi-icon-wrap" style={{ background: '#ecfdf5' }}><Ruler size={20} color="#10b981" /></div>
+                      <div><div className="pat-kpi-label">Boy</div><div className="pat-kpi-val">{patientData?.height ? `${patientData.height} cm` : '—'}</div></div>
+                    </div>
+                    <div className="pat-kpi-card">
+                      <div className="pat-kpi-icon-wrap" style={{ background: '#ecfdf5' }}><Scale size={20} color="#10b981" /></div>
+                      <div><div className="pat-kpi-label">Kilo</div><div className="pat-kpi-val">{patientData?.weight ? `${patientData.weight} kg` : '—'}</div></div>
+                    </div>
+                    <div className="pat-kpi-card">
+                      <div className="pat-kpi-icon-wrap" style={{ background: '#fff1f2' }}><Droplets size={20} color="#ef4444" /></div>
+                      <div><div className="pat-kpi-label">Kan Grubu</div><div className="pat-kpi-val" style={{ color: '#ef4444' }}>{patientData?.bloodType || 'Belirtilmemiş'}</div></div>
+                    </div>
+                    <div className="pat-kpi-card">
+                      <div className="pat-kpi-icon-wrap" style={{ background: '#eff6ff' }}><Activity size={20} color="#3b82f6" /></div>
+                      <div><div className="pat-kpi-label">VKİ</div><div className="pat-kpi-val" style={{ color: '#3b82f6' }}>{patientData?.height && patientData?.weight ? (patientData.weight / (patientData.height / 100) ** 2).toFixed(1) : '—'}</div></div>
+                    </div>
                   </div>
+                  {patientData?.chronicDiseases && (
+                    <div className="pat-card" style={{ marginTop: '24px' }}>
+                      <div className="pat-card-header"><h3>Kronik Hastalıklar / Sürekli İlaçlar</h3></div>
+                      <p style={{ color: '#475569', margin: 0, lineHeight: 1.6 }}>{patientData.chronicDiseases}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {activeTab === 'booking' && (
-                <div className="glass-card" style={{ maxWidth: '800px' }}>
-                  <h2>🗓️ Yeni Randevu Al</h2>
+              {/* RANDEVU ALMA */}
+              {(activeTab === 'booking-physical' || activeTab === 'booking-online') && (
+                <div className="pat-card" style={{ maxWidth: '800px', borderTop: `4px solid ${activeTab === 'booking-online' ? '#6366f1' : '#10b981'}` }}>
+                  <div className="pat-card-header" style={{ marginBottom: '8px' }}>
+                    <h3>{activeTab === 'booking-online' ? 'Yeni Online Muayene Randevusu' : 'Yeni Hastane Randevusu'}</h3>
+                    <span className={`pat-badge ${activeTab === 'booking-online' ? 'indigo' : 'green'}`}>{activeTab === 'booking-online' ? 'Online' : 'Yüz Yüze'}</span>
+                  </div>
+                  <p className="pat-muted" style={{ marginBottom: '24px' }}>
+                    {activeTab === 'booking-online' ? 'Görüşme saati geldiğinde "Randevularım" sekmesinden kameranızı açarak hekime bağlanabilirsiniz.' : 'Randevu saatinizden 15 dakika önce poliklinik sekreterliğine kayıt yaptırınız.'}
+                  </p>
+                  
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    
-                    <div className="form-group">
-                      <label className="form-label">1. Poliklinik (Bölüm)</label>
-                      <select className="modern-input" value={bookingData.dept?.id || ''} onChange={(e) => handleDeptSelect(e.target.value)}>
+                    <div className="pat-form-group">
+                      <label className="pat-label">1. Poliklinik (Bölüm)</label>
+                      <select className="pat-input" value={bookingData.dept?.id || ''} onChange={(e) => handleDeptSelect(e.target.value)}>
                         <option value="">Seçiniz...</option>
                         {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
                       </select>
                     </div>
-
                     {bookingData.dept && (
-                      <div className="form-group">
-                        <label className="form-label">2. Hekim</label>
-                        <select className="modern-input" value={bookingData.doc?.id || ''} onChange={(e) => setBookingData({...bookingData, doc: doctors.find(doc => doc.id === parseInt(e.target.value))})}>
+                      <div className="pat-form-group">
+                        <label className="pat-label">2. Hekim</label>
+                        <select className="pat-input" value={bookingData.doc?.id || ''} onChange={(e) => setBookingData({...bookingData, doc: doctors.find(doc => doc.id === parseInt(e.target.value))})}>
                           <option value="">Seçiniz...</option>
                           {doctors.map(d => <option key={d.id} value={d.id}>{d.email?.split('@')[0].toUpperCase()} ({d.specialization})</option>)}
                         </select>
                       </div>
                     )}
-
                     {bookingData.doc && (
-                      <div className="form-group">
-                        <label className="form-label">3. Tarih</label>
-                        <input type="date" className="modern-input" value={bookingData.date} min={new Date().toISOString().split('T')[0]} onChange={(e) => handleDateChange(e.target.value)} />
-                        
+                      <div className="pat-form-group">
+                        <label className="pat-label">3. Tarih</label>
+                        <input type="date" className="pat-input" style={{ maxWidth: '220px' }} value={bookingData.date} min={new Date().toISOString().split('T')[0]} onChange={(e) => handleDateChange(e.target.value)} />
                         {bookingData.date && (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px', marginTop: '15px' }}>
+                          <div className="pat-slots">
                             {timeSlots.length > 0 ? timeSlots.map((slot, i) => (
-                              <button key={i} onClick={() => setBookingData({...bookingData, time: slot})} style={{ padding: '12px', border: bookingData.time === slot ? 'none' : '1px solid #ddd', borderRadius: '8px', background: bookingData.time === slot ? '#2ecc71' : 'white', color: bookingData.time === slot ? 'white' : '#333', cursor: 'pointer', fontWeight: 'bold' }}>
+                              <button
+                                key={i}
+                                className={`pat-slot-btn ${bookingData.time === slot ? 'selected' : ''}`}
+                                data-color={activeTab === 'booking-online' ? 'indigo' : 'green'}
+                                onClick={() => setBookingData({...bookingData, time: slot})}
+                              >
                                 {slot}
                               </button>
                             )) : (
-                              <p style={{ color: '#e74c3c', gridColumn: '1 / -1', fontWeight: 'bold' }}>Bu tarihte uygun saat bulunmamaktadır veya mesai bitmiştir.</p>
+                              <p className="pat-no-slots">Bu tarihte uygun saat bulunmamaktadır veya mesai bitmiştir.</p>
                             )}
                           </div>
                         )}
                       </div>
                     )}
-
                     {bookingData.time && (
-                      <div className="form-group">
-                        <label className="form-label">4. Şikayetiniz / Notunuz (İsteğe Bağlı)</label>
-                        <textarea className="modern-input" placeholder="Doktora iletmek istediğiniz not..." value={bookingData.notes} onChange={(e) => setBookingData({...bookingData, notes: e.target.value})} />
-                        <button className="btn-modern-green" onClick={submitAppointment} style={{ marginTop: '20px' }}>Randevuyu Onayla</button>
+                      <div className="pat-form-group">
+                        <label className="pat-label">4. Şikayetiniz / Notunuz (İsteğe Bağlı)</label>
+                        <textarea className="pat-input pat-textarea" placeholder="Doktora iletmek istediğiniz ön bilgi..." value={bookingData.notes} onChange={(e) => setBookingData({...bookingData, notes: e.target.value})} />
+                        <button
+                          className="pat-btn-primary"
+                          onClick={submitAppointment}
+                          style={{ marginTop: '16px', background: activeTab === 'booking-online' ? '#6366f1' : '#10b981' }}
+                        >
+                          <CheckCircle size={16} /> Randevuyu Onayla
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* PROFİL */}
               {activeTab === 'profile' && (
-                <div className="glass-card" style={{ maxWidth: '700px' }}>
-                  <h2>👤 Profilim & Sağlık Bilgilerim</h2>
-                  {updateMsg.text && <div className={`alert-box ${updateMsg.type === 'success' ? 'alert-success' : 'alert-error'}`}>{updateMsg.text}</div>}
-                  <div style={{ backgroundColor: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '30px', border: '1px solid #e9ecef' }}>
-                    <h3 style={{ fontSize: '16px', color: '#34495e', marginTop: 0, borderBottom: 'none', paddingBottom: 0 }}>Kimlik Bilgileri (Salt Okunur)</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                      <div><label className="form-label" style={{ fontSize: '12px' }}>T.C. Kimlik No</label><div style={{ fontWeight: 'bold', color: '#2c3e50' }}>{patientData?.identityNumber}</div></div>
-                      <div><label className="form-label" style={{ fontSize: '12px' }}>İsim Soyisim / Email</label><div style={{ fontWeight: 'bold', color: '#2c3e50' }}>{getFullName()}</div></div>
+                <div className="pat-card" style={{ maxWidth: '700px' }}>
+                  <div className="pat-card-header" style={{ marginBottom: '20px' }}>
+                    <h3>Profilim &amp; Sağlık Bilgilerim</h3>
+                  </div>
+                  {updateMsg.text && (
+                    <div className={`pat-alert ${updateMsg.type === 'success' ? 'success' : 'error'}`}>{updateMsg.text}</div>
+                  )}
+                  <div className="pat-id-box">
+                    <div>
+                      <div className="pat-id-label">T.C. Kimlik No</div>
+                      <div className="pat-id-value">{patientData?.identityNumber}</div>
+                    </div>
+                    <div>
+                      <div className="pat-id-label">İsim / E-posta</div>
+                      <div className="pat-id-value">{getFullName()}</div>
                     </div>
                   </div>
-
                   <form onSubmit={handleProfileUpdate}>
-                    <div className="form-grid">
-                      <div className="form-group"><label className="form-label">Boy (cm)</label><input type="number" name="height" className="modern-input" value={profileForm.height} onChange={(e) => setProfileForm({...profileForm, height: e.target.value})} /></div>
-                      <div className="form-group"><label className="form-label">Kilo (kg)</label><input type="number" name="weight" className="modern-input" value={profileForm.weight} onChange={(e) => setProfileForm({...profileForm, weight: e.target.value})} /></div>
-                      <div className="form-group"><label className="form-label">Kan Grubu</label><input type="text" name="bloodType" className="modern-input" value={profileForm.bloodType} onChange={(e) => setProfileForm({...profileForm, bloodType: e.target.value})} /></div>
+                    <div className="pat-form-grid">
+                      <div className="pat-form-group">
+                        <label className="pat-label">Boy (cm)</label>
+                        <input type="number" className="pat-input" value={profileForm.height} onChange={(e) => setProfileForm({...profileForm, height: e.target.value})} />
+                      </div>
+                      <div className="pat-form-group">
+                        <label className="pat-label">Kilo (kg)</label>
+                        <input type="number" className="pat-input" value={profileForm.weight} onChange={(e) => setProfileForm({...profileForm, weight: e.target.value})} />
+                      </div>
+                      <div className="pat-form-group">
+                        <label className="pat-label">Kan Grubu</label>
+                        <input type="text" className="pat-input" value={profileForm.bloodType} onChange={(e) => setProfileForm({...profileForm, bloodType: e.target.value})} />
+                      </div>
                     </div>
-                    <div className="form-group" style={{ marginTop: '20px' }}><label className="form-label">Kronik Hastalıklar veya Sürekli Kullanılan İlaçlar</label><textarea name="chronicDiseases" className="modern-input" value={profileForm.chronicDiseases} onChange={(e) => setProfileForm({...profileForm, chronicDiseases: e.target.value})} /></div>
-                    <div style={{ marginTop: '25px', textAlign: 'right' }}><button type="submit" className="btn-modern-green" disabled={isUpdating}>{isUpdating ? 'Kaydediliyor...' : 'Bilgilerimi Güncelle'}</button></div>
+                    <div className="pat-form-group" style={{ marginTop: '16px' }}>
+                      <label className="pat-label">Kronik Hastalıklar / Sürekli Kullanılan İlaçlar</label>
+                      <textarea className="pat-input pat-textarea" value={profileForm.chronicDiseases} onChange={(e) => setProfileForm({...profileForm, chronicDiseases: e.target.value})} />
+                    </div>
+                    <div style={{ textAlign: 'right', marginTop: '20px' }}>
+                      <button type="submit" className="pat-btn-primary" disabled={isUpdating}>
+                        <Save size={16} /> {isUpdating ? 'Kaydediliyor...' : 'Bilgilerimi Güncelle'}
+                      </button>
+                    </div>
                   </form>
                 </div>
               )}
@@ -290,33 +399,66 @@ const PatientPanel = () => {
                   <h2>📋 Randevu Geçmişim</h2>
                   {appointments.length === 0 ? <p>Randevunuz bulunmuyor.</p> : appointments.map(a => (
                     <div key={a.id} style={{ padding: '15px', borderBottom: '1px solid #eee', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div><div style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '16px' }}>Dr. {a.doctor?.email?.split('@')[0]}</div><div style={{ fontSize: '14px', color: '#7f8c8d' }}>{new Date(a.dateTime).toLocaleString('tr-TR')}</div></div>
-                      <div style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: a.status === 'PENDING' ? '#fff3cd' : '#d4edda', color: a.status === 'PENDING' ? '#856404' : '#155724' }}>{a.status === 'PENDING' ? '⏳ Bekliyor' : '✅ Tamamlandı'}</div>
+                      <div>
+                        <div style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '16px' }}>
+                          Dr. {a.doctor?.email?.split('@')[0]}
+                          {a.appointmentType === 'ONLINE' && <span style={{ marginLeft: '10px', fontSize: '12px', padding: '3px 8px', backgroundColor: '#3498db', color: 'white', borderRadius: '12px' }}>Online</span>}
+                        </div>
+                        <div style={{ fontSize: '14px', color: '#7f8c8d' }}>{new Date(a.dateTime).toLocaleString('tr-TR')}</div>
+                      </div>
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold', backgroundColor: a.status === 'PENDING' ? '#fff3cd' : '#d4edda', color: a.status === 'PENDING' ? '#856404' : '#155724' }}>
+                          {a.status === 'PENDING' ? '⏳ Bekliyor' : '✅ Tamamlandı'}
+                        </div>
+                        
+                        {/* � İş Kuralı: Zaman sınırı + tek seferlik giriş kontrolü */}
+                        {a.status === 'PENDING' && a.appointmentType === 'ONLINE' && (() => {
+                          const roomKey = `MHRS_ROOM_${a.id}`;
+                          const joinStatus = getJoinStatus(a.dateTime);
+                          if (usedRooms.has(roomKey) || joinStatus === 'expired') {
+                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#e74c3c', color: 'white', fontWeight: 'bold', fontSize: '11px' }}>🔴 Süresi Doldu</span>;
+                          }
+                          if (joinStatus === 'not-yet') {
+                            return <span style={{ padding: '6px 10px', borderRadius: '8px', backgroundColor: '#95a5a6', color: 'white', fontWeight: 'bold', fontSize: '11px' }}>⏰ Henüz Başlamadı</span>;
+                          }
+                          return (
+                            <button
+                              onClick={() => setJitsiRoom(roomKey)}
+                              style={{ padding: '6px 12px', borderRadius: '8px', border: 'none', backgroundColor: '#e74c3c', color: 'white', cursor: 'pointer', fontWeight: 'bold', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}
+                            >
+                              🎥 Katıl
+                            </button>
+                          );
+                        })()}
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
               
-              {/* 🔥 EKLENEN REÇETELERİM SEKME KODU */}
+              {/* REÇETELERİM */}
               {activeTab === 'prescriptions' && (
-                <div className="glass-card">
-                  <h2>💊 Reçetelerim</h2>
+                <div className="pat-card">
+                  <div className="pat-card-header" style={{ marginBottom: '16px' }}>
+                    <h3>Reçetelerim</h3>
+                    <span className="pat-badge gray">{prescriptions.length} reçete</span>
+                  </div>
                   {prescriptions.length === 0 ? (
-                    <p style={{ color: '#7f8c8d' }}>Sistemde kayıtlı reçeteniz bulunmamaktadır.</p>
+                    <p className="pat-muted">Sistemde kayıtlı reçeteniz bulunmamaktadır.</p>
                   ) : (
                     prescriptions.map(prec => (
-                      <div key={prec.id} style={{ padding: '20px', border: '1px solid #e1e8ed', borderRadius: '10px', marginBottom: '15px', backgroundColor: '#f8f9fa' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #ddd', paddingBottom: '10px', marginBottom: '10px' }}>
-                          <div style={{ fontWeight: 'bold', color: '#2c3e50', fontSize: '16px' }}>
-                            Dr. {prec.appointment?.doctor?.email?.split('@')[0] || 'Bilinmiyor'}
+                      <div key={prec.id} className="pat-rx-card">
+                        <div className="pat-rx-header">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                            <div className="pat-apt-icon" style={{ background: '#ecfdf5', width: '36px', height: '36px', flexShrink: 0 }}><Pill size={17} color="#10b981" /></div>
+                            <div style={{ fontWeight: 700, color: '#0f172a' }}>Dr. {prec.appointment?.doctor?.email?.split('@')[0] || 'Bilinmiyor'}</div>
                           </div>
-                          <div style={{ color: '#7f8c8d', fontSize: '14px', fontWeight: 'bold' }}>
-                            {prec.appointment?.dateTime ? new Date(prec.appointment.dateTime).toLocaleDateString('tr-TR') : 'Tarih Yok'}
-                          </div>
+                          <span className="pat-badge gray">{prec.appointment?.dateTime ? new Date(prec.appointment.dateTime).toLocaleDateString('tr-TR') : 'Tarih Yok'}</span>
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                          <div><strong style={{ color: '#3498db' }}>İlaçlar:</strong> <span style={{ color: '#333' }}>{prec.medicineList}</span></div>
-                          <div><strong style={{ color: '#e67e22' }}>Kullanım (Dozaj):</strong> <span style={{ color: '#333' }}>{prec.dosage}</span></div>
+                        <div className="pat-rx-body">
+                          <div><span className="pat-rx-label">İlaçlar</span><span>{prec.medicineList}</span></div>
+                          <div><span className="pat-rx-label" style={{ color: '#f59e0b' }}>Dozaj</span><span>{prec.dosage}</span></div>
                         </div>
                       </div>
                     ))
@@ -328,6 +470,51 @@ const PatientPanel = () => {
           )}
         </div>
       </main>
+
+      {/* JITSI — DOKUNULMAZ */}
+      {jitsiRoom && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: '#000', zIndex: 9999, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ padding: '15px 20px', backgroundColor: '#1e1b4b', color: 'white', display: 'flex', justifyContent: 'space-between', alignItems: 'center', boxShadow: '0 4px 10px rgba(0,0,0,0.5)' }}>
+            <div>
+              <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ display: 'inline-block', width: '10px', height: '10px', backgroundColor: '#e74c3c', borderRadius: '50%', animation: 'pulse 1.5s infinite' }}></span>
+                Online Muayene Odası
+              </h3>
+              <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: '#a5b4fc' }}>Bağlantı şifrelidir. Lütfen hekimin odaya katılmasını bekleyiniz.</p>
+            </div>
+            <button
+              onClick={() => { setUsedRooms(prev => new Set([...prev, jitsiRoom])); setJitsiRoom(null); }}
+              style={{ backgroundColor: '#e74c3c', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}
+            >
+              🚪 Görüşmeden Ayrıl
+            </button>
+          </div>
+          <div style={{ flex: 1 }}>
+            <JitsiMeeting
+              domain="meet.systemli.org"
+              roomName={jitsiRoom}
+              configOverwrite={{
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                disableModeratorIndicator: true
+              }}
+              interfaceConfigOverwrite={{
+                DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+                SHOW_CHROME_EXTENSION_BANNER: false
+              }}
+              userInfo={{
+                displayName: getFullName()
+              }}
+              getIFrameRef={(iframeRef) => {
+                iframeRef.style.height = '100%';
+                iframeRef.style.width = '100%';
+                iframeRef.style.border = 'none';
+              }}
+            />
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };
