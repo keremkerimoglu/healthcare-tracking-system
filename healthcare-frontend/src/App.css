@@ -1,0 +1,170 @@
+.App {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Menu Screen */
+.menu-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.menu-container {
+  background: white;
+  padding: 60px 40px;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  text-align: center;
+}
+
+.menu-container h1 {
+  font-size: 2.5em;
+  color: #2c3e50;
+  margin: 0 0 15px 0;
+}
+
+.menu-subtitle {
+  font-size: 1.2em;
+  color: #7f8c8d;
+  margin-bottom: 40px;
+}
+
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  padding: 30px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.menu-btn:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.patient-btn {
+  border-left: 4px solid #3498db;
+}
+
+.patient-btn:hover {
+  background: #ecf0f1;
+}
+
+.doctor-btn {
+  border-left: 4px solid #27ae60;
+}
+
+.doctor-btn:hover {
+  background: #f0fdf4;
+}
+
+.admin-btn {
+  border-left: 4px solid #8e44ad;
+}
+
+.admin-btn:hover {
+  background: #f3e9ff;
+}
+
+.btn-icon {
+  font-size: 3em;
+  min-width: 80px;
+}
+
+.btn-content {
+  text-align: left;
+}
+
+.btn-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.3em;
+  color: #2c3e50;
+}
+
+.btn-content p {
+  margin: 0;
+  color: #7f8c8d;
+  font-size: 0.95em;
+}
+
+/* View Container */
+.view-container {
+  position: relative;
+  min-height: 100vh;
+  padding-top: 20px;
+}
+
+.back-btn {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  z-index: 100;
+  backdrop-filter: blur(10px);
+}
+
+.back-btn:hover {
+  background: white;
+  color: #667eea;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .menu-container {
+    padding: 40px 20px;
+  }
+
+  .menu-container h1 {
+    font-size: 2em;
+  }
+
+  .menu-subtitle {
+    font-size: 1em;
+  }
+
+  .menu-btn {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+    padding: 20px;
+  }
+
+  .btn-content {
+    text-align: center;
+  }
+
+  .btn-content h3 {
+    font-size: 1.1em;
+  }
+
+  .back-btn {
+    top: 10px;
+    left: 10px;
+    padding: 8px 15px;
+    font-size: 0.9em;
+  }
+}
